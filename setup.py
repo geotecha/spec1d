@@ -3,14 +3,14 @@ from setuptools import setup
 #from distutils.core import setup
 # why different? http://stackoverflow.com/questions/6344076/differences-between-distribute-distutils-setuptools-and-distutils2
 
-with open('README.txt') as file:
-    long_description = file.read()
-
+def readme():
+    with open('README.rst') as f:
+        return f.read()
 
 setup(name='spec1d',
       version='0.1',
       description='Multilayer vertical and radial soil consolidation using the spectral method',
-      long_description=long_description,
+      long_description=readme(),
       classifiers=[
         'Development Status :: 1 - Planning',
         'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',
