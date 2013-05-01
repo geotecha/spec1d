@@ -4,5 +4,11 @@
 # Setuptools distribution folder.
 /dist/
 
+# setuptools build folder ????
+/build/
+
 # Python egg metadata, regenerated from source files by setuptools.
 /*.egg-info
+
+# License header for each source file
+LICENSE_header.txt
