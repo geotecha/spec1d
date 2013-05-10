@@ -15,12 +15,13 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
 #==============================================================================
-"""The basis_function module contains functions for forming the basis 
-    functions and eigenvalues for spectral methods
+"""Equations for one dimesnional spectral consolidation
     
     """
 
-def eigenvalues_of_sine(i, boundary=0):
+from __future__ import division
+
+def m_func(i, boundary=0):
     """Sine series eigenvalue of boundary value problem on [0, 1]
     
     
@@ -49,3 +50,27 @@ def eigenvalues_of_sine(i, boundary=0):
         raise ValueError('boundary = %s; must be 0 or 1.' % (boundary))
         
     return pi * (i + 1 - boundary / 2.0)
+    
+def make_gam(m,zt,zb,mvt,mvb):
+    
+    import numpy
+    from math import cos, sin    
+    neig = len(m)
+    nlayer = len(zt)
+    
+    gam = numpy.zeros([neig, neig], float)        
+    for layer in range(nlayer):
+        for i in range(neig - 1):
+            gam[i, i] += (-cos(zb[layer]*m[i])*sin(zb[layer]*m[i])/2 + zb[layer]*m[i]/2)*m[i]**(-1) - (-cos(zt[layer]*m[i])*sin(zt[layer]*m[i])/2 + zt[layer]*m[i]/2)*m[i]**(-1)
+            for j in range(i + 1, neig):
+                gam[i, j] += 0                
+                
+    #gam is symmetric
+    for i in range(neig - 1):        
+        for j in range(i + 1, neig):
+            gam[j, i] = gam[i, j]                
+    
+    return gam
+
+
+    
