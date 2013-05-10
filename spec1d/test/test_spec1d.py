@@ -15,9 +15,9 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
 #==============================================================================
-"""test routines for the basis_function module
+"""test routines for the spec1d module
 Shows a few approaches to testing using the 
-spec1d.basis_functions.eigenvalues_of_sine function as an example
+m_func function as an example
 
 """
 
@@ -26,8 +26,8 @@ from nose.tools.trivial import assert_almost_equal
 from nose.tools.trivial import assert_raises
 import numpy as np
 
-import spec1d.basis_functions
-
+from spec1d.spec1d import m_func
+from spec1d.spec1d import make_gam
 
 ### start Method 1: global vars 
 ###     (not recommended as it uses global variables)
@@ -35,49 +35,50 @@ PTPB = None
 PTIB = None
 
 def setup():
-    """setup fn for eigenvalues_of_sine tests using global variables"""
+    """setup fn for m_func tests using global variables"""
     global PTPB, PTIB
     PTPB = [3.14159, 6.28319, 9.42478, 12.56637, 15.70796, 18.84956, 21.99115]
     PTIB = [1.57080, 4.71239, 7.85398, 10.99557, 14.13717, 17.27876, 20.42035]
 
 def teardown():
-    """teardown fn for eigenvalues_of_sine tests using global variables"""
+    """teardown fn for m_func tests using global variables"""
     global PTPB, PTIB
     PTPB = None
     PTIB = None
 
 @with_setup(setup, teardown)    
-def test_eigenvalues_of_sine_bc_0v1():
-    """eigenvalues_of_sine tests using global vars, i = 0, boundary = 0"""       
-    m0 = spec1d.basis_functions.eigenvalues_of_sine(0, 0)    
+def test_m_func_bc_0v1():
+    """m_func tests using global vars, i = 0, boundary = 0"""       
+        
+    m0 = m_func(0, 0)    
     assert_almost_equal(m0, PTPB[0], 5)
     
 @with_setup(setup)
-def test_eigenvalues_of_sine_bc_1v1():
-    """eigenvalues_of_sine tests using global vars, i = 0, boundary = 1"""        
-    m0 = spec1d.basis_functions.eigenvalues_of_sine(0, 1)    
+def test_m_func_bc_1v1():
+    """m_func tests using global vars, i = 0, boundary = 1"""        
+    m0 = m_func(0, 1)    
     assert_almost_equal(m0, PTIB[0], 5)
 ### end Method 1
 
 ### start Method 2: self contained
 ###     (ok for very simply tests but will lead to repeated data)
 
-def test_eigenvalues_of_sine_bc_0v2():
-    """eigenvalues_of_sine tests, self contained, i = 0, boundary = 0"""        
-    m0 = spec1d.basis_functions.eigenvalues_of_sine(0, 0)    
+def test_m_func_bc_0v2():
+    """m_func tests, self contained, i = 0, boundary = 0"""        
+    m0 = m_func(0, 0)    
     assert_almost_equal(m0, 3.14159, 5)
     
-def test_eigenvalues_of_sine_bc_1v2():        
-    """eigenvalues_of_sine tests, self contained, i = 0, boundary = 1"""
-    m0 = spec1d.basis_functions.eigenvalues_of_sine(0, 1)    
+def test_m_func_bc_1v2():        
+    """m_func tests, self contained, i = 0, boundary = 1"""
+    m0 = m_func(0, 1)    
     assert_almost_equal(m0, 1.57080, 5)
 ### end Method 2
 
 
 ### start Method 3: classes
 ###     (better than 1 and 2 when fixtures are needed)
-class test_eigenvalues_of_sine(object):
-    """A suite of tests for spec1d.basis_functions.eigenvalues_of_sine
+class test_m_func(object):
+    """A suite of tests for m_func
     Shows two approaches: individual methods and looping through a list
     
     """
@@ -97,35 +98,82 @@ class test_eigenvalues_of_sine(object):
             [(np.array(range(7)), 0), self.PTPB],
             [(np.array(range(7)), 0), self.PTIB],
             ] #then you canjust add more cases
+                
     def test_bc0(self):
         """test i = 0, boundary = 0"""
-        m0 = spec1d.basis_functions.eigenvalues_of_sine(0,0)    
+        m0 = m_func(0,0)    
         assert_almost_equal(m0, self.PTPB[0], 5)
         
     def test_bc1(self): 
         """test i = 0, boundary = 1"""
-        m0 = spec1d.basis_functions.eigenvalues_of_sine(0,1)    
+        m0 = m_func(0,1)    
         assert_almost_equal(m0, self.PTIB[0], 5)
 
     def test_numpy(self):
         """test a numpy array as input to i; i = range(7), boundary = 0"""
         x = np.array(range(7))
-        y0 = spec1d.basis_functions.eigenvalues_of_sine(x,0)
+        y0 = m_func(x,0)
         assert np.allclose(y0,self.PTPB)
-    
     
     ### a generator example
     def test_cases(self):
-        """loop through and test cases with numpy.allclose"""
+        """loop through and test m_func cases with numpy.allclose"""
         for fixture,result in self.cases:
-            m = spec1d.basis_functions.eigenvalues_of_sine(*fixture)
+            m = m_func(*fixture)
             yield np.allclose, m, result
             
     
             
 ### end Method 3        
 
-def test_eigenvalues_of_sine_bad_boundary():
-    """eigenvalues_of_sine fail test, self contained, i = 2, boundary = 1.5"""
-    assert_raises(ValueError,
-                  spec1d.basis_functions.eigenvalues_of_sine , 2, 1.5)
+def test_m_func_bad_boundary():
+    """m_func fail test, self contained, i = 2, boundary = 1.5"""
+    assert_raises(ValueError, m_func , 2, 1.5)
+    
+
+
+
+class test_make_gam(object):
+    """A suite of tests for the make_gam function        
+    """
+    
+    def __init__(self):        
+        self.PTPB = m_func(np.arange(2),0)
+        self.PTIB = m_func(np.arange(2),1)
+        self.gam_isotropic = np.array([[0.5, 0], [0, 0.5]])
+        
+        self.cases = [            
+            [{'m': self.PTIB, 'zt': [0], 'zb': [1], 'mvt': [1], 'mvb': [1]},
+             self.gam_isotropic],
+            [{'m': self.PTPB, 'zt': [0], 'zb': [1], 'mvt': [1], 'mvb': [1]},
+             self.gam_isotropic],
+             
+            [{'m': self.PTIB, 'zt': [0], 'zb': [1], 'mvt': [2], 'mvb': [2]},
+             self.gam_isotropic * 2],
+            [{'m': self.PTPB, 'zt': [0], 'zb': [1], 'mvt': [2], 'mvb': [2]},
+             self.gam_isotropic * 2],
+             
+            [{'m': self.PTIB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'mvt': [1, 1], 'mvb': [1, 1]},
+             self.gam_isotropic],
+            [{'m': self.PTPB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'mvt': [1, 1], 'mvb': [1, 1]},
+             self.gam_isotropic], 
+            
+            [{'m': self.PTIB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'mvt': [2, 2], 'mvb': [2, 2]},
+             self.gam_isotropic],
+            [{'m': self.PTPB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'mvt': [2, 2], 'mvb': [2, 2]},
+             self.gam_isotropic],
+             
+            [{'m': self.PTIB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'mvt': [1, 0.5], 'mvb': [1, 0.5]},
+             [[0.274317, 0.052295], [0.052295, 0.3655915]]],
+            [{'m': self.PTPB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'mvt': [1, 0.5], 'mvb': [1, 0.5]},
+             [[0.375, 0.106103295], [0.106103295, 0.375]]]
+            ]
+        
+                             
+    
+        
+    ### a generator example
+    def test_cases(self):        
+        for fixture, result in self.cases:            
+            gam = make_gam(**fixture)
+            yield np.allclose, gam, result                        

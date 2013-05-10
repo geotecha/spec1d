@@ -30,64 +30,113 @@ from sympy.tensor import IndexedBase, Idx
 def linear(x, x1, y1, x2, y2):
     return (y2 - y1)/(x2 - x1) * (x-x1) + y1
     
-
-
-
-from sympy import symbols
-from sympy.utilities.codegen import codegen
-from sympy import Eq
-
-
 def phi(m,z):
     return sin(m*z)
 
 
-m = IndexedBase('m')
-mvt = IndexedBase('mvt')
-mvb = IndexedBase('mvb')
-zt = IndexedBase('zt')
-zb = IndexedBase('zb')
-z = Symbol('z')
-
-i = Idx('i')
-j = Idx('j')
-layer = Idx('layer')
-
-fdiag = integrate(phi(m[i], z) * phi(m[i], z), z)
-fdiag = fdiag.subs(z, zb[layer]) - fdiag.subs(z, zt[layer])
-
-foff = integrate(phi(m[i], z) * phi(m[j], z), z)
-foff = fdiag.subs(z, zb[layer])-fdiag.subs(z, zt[layer])
-
-text = """def make_gam_scalar(m,mvt,mvb,zt,zb,):
-    import numpy
-    neig = len(m)
-    nlayers = len(zt)
+def generate_gam_code():
+    m = IndexedBase('m')
+    mvt = IndexedBase('mvt')
+    mvb = IndexedBase('mvb')
+    zt = IndexedBase('zt')
+    zb = IndexedBase('zb')
+    z = Symbol('z')
     
-    gam = numpy.zeros([neig, neig], float)        
-    for layer in range(nlayer):
-        for i in range(neig - 1):
-            gam[i, i] += %s
+    i = Idx('i')
+    j = Idx('j')
+    layer = Idx('layer')
+    
+    fdiag = integrate(phi(m[i], z) * phi(m[i], z), z)
+    fdiag = fdiag.subs(z, zb[layer]) - fdiag.subs(z, zt[layer])
+    
+    foff = integrate(phi(m[i], z) * phi(m[j], z), z)
+    foff = fdiag.subs(z, zb[layer])-fdiag.subs(z, zt[layer])
+    
+    text = """def make_gam(m, mvt, mvb, zt, zb):
+        import numpy
+        neig = len(m)
+        nlayers = len(zt)
+        
+        gam = numpy.zeros([neig, neig], float)        
+        for layer in range(nlayer):
+            for i in range(neig - 1):
+                gam[i, i] += %s
+                for j in range(i + 1, neig):
+                    gam[i, j] += %s                
+                    
+        #gam is symmetric
+        for i in range(neig - 1):        
             for j in range(i + 1, neig):
-                gam[i, j] += %s                
-                
-    #gam is symmetric
-    for i in range(neig - 1):        
-        for j in range(i + 1, neig):
-            gam[j, i] = gam[i, j]                
+                gam[j, i] = gam[i, j]                
+        
+        return gam"""
     
-    return gam"""
+        
+    fn = text % (fdiag, foff)
+        
+    return fn
 
+def generate_psi_code():
+    m = IndexedBase('m')
+    kvt = IndexedBase('kvt')
+    kvb = IndexedBase('kvb')
+    kht = IndexedBase('kht')
+    khb = IndexedBase('khb')
+    ett = IndexedBase('ett')
+    etb = IndexedBase('etb')
+    zt = IndexedBase('zt')
+    zb = IndexedBase('zb')
+    dTv = Symbol('z')
+    dTh = Symbol('z')
+    dT = Symbol('z')
     
-fn = text % (fdiag, foff)
+    z = Symbol('z')
     
-print(fn)
+    i = Idx('i')
+    j = Idx('j')
+    layer = Idx('layer')
+    
+    fdiag = #integrate(phi(m[i], z) * phi(m[i], z), z)
+    fdiag = #fdiag.subs(z, zb[layer]) - fdiag.subs(z, zt[layer])
+    
+    foff = #integrate(phi(m[i], z) * phi(m[j], z), z)
+    foff = #fdiag.subs(z, zb[layer])-fdiag.subs(z, zt[layer])
+    
+    text = """def make_psi(m, kvt, kvb, kht, khb, ett, etb, 
+                           zt, zb, dTv, dTh = 0.0, dT = 1.0):
+        import numpy
+        neig = len(m)
+        nlayers = len(zt)
+        
+        psi = numpy.zeros([neig, neig], float)        
+        for layer in range(nlayer):
+            for i in range(neig - 1):
+                psi[i, i] += %s
+                for j in range(i + 1, neig):
+                    psi[i, j] += %s                
+                    
+        #psi is symmetric
+        for i in range(neig - 1):        
+            for j in range(i + 1, neig):
+                psi[j, i] = psi[i, j]                
+        
+        return psi"""
+    
+        
+    fn = text % (fdiag, foff)
+        
+    return fn
 
 
-
-
-
+if __name__ == '__main__':
+    print(generate_gam_code())
+    print()
+    print(generate_psi_code())
+    
 #==============================================================================
+# from sympy import symbols
+# from sympy.utilities.codegen import codegen
+# from sympy import Eq
 # n,m = symbols('n m', integer=True)
 # A = IndexedBase('A')
 # x = IndexedBase('x')
