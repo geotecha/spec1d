@@ -22,7 +22,7 @@ from __future__ import division
 
 import sympy
 
-from sympy import Symbol, sin, cos, integrate
+from sympy import Symbol, sin, cos, integrate, diff, assume
  
 from sympy.tensor import IndexedBase, Idx
 
@@ -46,30 +46,59 @@ def generate_gam_code():
     j = Idx('j')
     layer = Idx('layer')
     
-    fdiag = integrate(phi(m[i], z) * phi(m[i], z), z)
+    
+    mi = Symbol('mi')
+    mj = Symbol('mj')
+    ztop = Symbol('ztop')
+    zbot = Symbol('zbot')
+    mvtop = Symbol('mvtop')
+    mvbot = Symbol('mvbot')
+        
+    mv = linear(z, ztop, mvtop, zbot, mvbot)
+    
+    #fdiag = integrate(mv * phi(m[i], z) * phi(m[i], z), z)
+    fdiag = integrate(mv * phi(mi, z) * phi(mi, z), z)
+    fdiag = fdiag.subs([
+                        [ztop, zt[layer]], 
+                        [mvtop, mvt[layer]],
+                        [zbot, zb[layer]],
+                        [mvbot, mvb[layer]]
+                        ])
+    fdiag = fdiag.subs([[mi,m[i]],[mj,m[j]]])                        
     fdiag = fdiag.subs(z, zb[layer]) - fdiag.subs(z, zt[layer])
     
-    foff = integrate(phi(m[i], z) * phi(m[j], z), z)
-    foff = fdiag.subs(z, zb[layer])-fdiag.subs(z, zt[layer])
+    #foff = integrate(phi(m[i], z) * phi(m[j], z), z)
+    foff = integrate(mv * phi(mi, z) * phi(mj, z), z)
+    foff = foff.subs([
+                        [ztop, zt[layer]], 
+                        [mvtop, mvt[layer]],
+                        [zbot, zb[layer]],
+                        [mvbot, mvb[layer]]
+                        ]) 
+    foff = foff.subs([[mi,m[i]],[mj,m[j]]])    
+    foff = foff.subs(z, zb[layer])-foff.subs(z, zt[layer])
     
     text = """def make_gam(m, mvt, mvb, zt, zb):
-        import numpy
-        neig = len(m)
-        nlayers = len(zt)
-        
-        gam = numpy.zeros([neig, neig], float)        
-        for layer in range(nlayer):
-            for i in range(neig - 1):
-                gam[i, i] += %s
-                for j in range(i + 1, neig):
-                    gam[i, j] += %s                
-                    
-        #gam is symmetric
-        for i in range(neig - 1):        
+    import numpy
+    from math import sin, cos
+    
+    neig = len(m)
+    nlayers = len(zt)
+    
+    gam = numpy.zeros([neig, neig], float)        
+    for layer in range(nlayers):
+        for i in range(neig):
+            gam[i, i] += %s
+        for i in range(neig-1):
             for j in range(i + 1, neig):
-                gam[j, i] = gam[i, j]                
-        
-        return gam"""
+                gam[i, j] += %s                
+                
+    #gam is symmetric
+    for i in range(neig - 1):        
+        for j in range(i + 1, neig):
+            gam[j, i] = gam[i, j]                
+    
+    return gam"""
     
         
     fn = text % (fdiag, foff)
@@ -96,11 +125,11 @@ def generate_psi_code():
     j = Idx('j')
     layer = Idx('layer')
     
-    fdiag = #integrate(phi(m[i], z) * phi(m[i], z), z)
-    fdiag = #fdiag.subs(z, zb[layer]) - fdiag.subs(z, zt[layer])
-    
-    foff = #integrate(phi(m[i], z) * phi(m[j], z), z)
-    foff = #fdiag.subs(z, zb[layer])-fdiag.subs(z, zt[layer])
+#    fdiag = integrate(diff(phi(m[i], z),z,2) * phi(m[i], z), z)-
+#    fdiag = #fdiag.subs(z, zb[layer]) - fdiag.subs(z, zt[layer])
+#    
+#    foff = #integrate(phi(m[i], z) * phi(m[j], z), z)
+#    foff = #fdiag.subs(z, zb[layer])-fdiag.subs(z, zt[layer])
     
     text = """def make_psi(m, kvt, kvb, kht, khb, ett, etb, 
                            zt, zb, dTv, dTh = 0.0, dT = 1.0):
@@ -130,8 +159,8 @@ def generate_psi_code():
 
 if __name__ == '__main__':
     print(generate_gam_code())
-    print()
-    print(generate_psi_code())
+    print
+    #print(generate_psi_code())
     
 #==============================================================================
 # from sympy import symbols

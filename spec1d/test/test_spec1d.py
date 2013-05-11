@@ -22,8 +22,7 @@ m_func function as an example
 """
 
 from nose import with_setup
-from nose.tools.trivial import assert_almost_equal
-from nose.tools.trivial import assert_raises
+from nose.tools.trivial import assert_almost_equal, assert_raises, ok_
 import numpy as np
 
 from spec1d.spec1d import m_func
@@ -91,12 +90,12 @@ class test_m_func(object):
         
                      
         self.cases = [ #used for generator example
-            [(0, 0), 3.14159],
+            [(4, 0), 3.14159],
             [(0, 1), 1.57080],
             [(1, 0), 6.28319],
             [(1, 1), 4.71239],
             [(np.array(range(7)), 0), self.PTPB],
-            [(np.array(range(7)), 0), self.PTIB],
+            [(np.array(range(7)), 1), self.PTIB],
             ] #then you canjust add more cases
                 
     def test_bc0(self):
@@ -119,9 +118,16 @@ class test_m_func(object):
     def test_cases(self):
         """loop through and test m_func cases with numpy.allclose"""
         for fixture,result in self.cases:
-            m = m_func(*fixture)
-            yield np.allclose, m, result
-            
+            m = m_func(*fixture)            
+            check = np.allclose(m, result)
+            msg = """\
+failed m_func.test_cases, case:
+%s
+m:
+%s
+expected:
+%s""" % (fixture, m, result)
+            yield ok_, check, msg
     
             
 ### end Method 3        
@@ -159,21 +165,30 @@ class test_make_gam(object):
              self.gam_isotropic], 
             
             [{'m': self.PTIB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'mvt': [2, 2], 'mvb': [2, 2]},
-             self.gam_isotropic],
+             self.gam_isotropic * 2],
             [{'m': self.PTPB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'mvt': [2, 2], 'mvb': [2, 2]},
-             self.gam_isotropic],
+             self.gam_isotropic * 2],
              
             [{'m': self.PTIB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'mvt': [1, 0.5], 'mvb': [1, 0.5]},
-             [[0.274317, 0.052295], [0.052295, 0.3655915]]],
+             np.array([[0.274317, 0.052295], [0.052295, 0.3655915]])],
             [{'m': self.PTPB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'mvt': [1, 0.5], 'mvb': [1, 0.5]},
-             [[0.375, 0.106103295], [0.106103295, 0.375]]]
+             np.array([[0.326612767905, 0.0912741609272], [0.0912741609272, 2* 0.368920668216]])]
             ]
         
                              
     
         
     ### a generator example
-    def test_cases(self):        
+    def test_cases(self):   
+        """loop through and test make_gam cases with numpy.allclose"""
         for fixture, result in self.cases:            
             gam = make_gam(**fixture)
-            yield np.allclose, gam, result                        
+            check = np.allclose(gam, result)
+            msg = """\
+failed test_make_gam, case:
+%s
+gam:
+%s
+expected:
+%s""" % (fixture, gam, result)
+            yield ok_, check, msg
