@@ -20,9 +20,7 @@ subroutines"""
 
 from __future__ import division
 
-import sympy
-
-from sympy import Symbol, sin, cos, integrate, diff, assume
+from sympy import Symbol, sin, cos, integrate, diff, var, symbols, Function, simplify
  
 from sympy.tensor import IndexedBase, Idx
 
@@ -33,53 +31,46 @@ def linear(x, x1, y1, x2, y2):
 def phi(m,z):
     return sin(m*z)
 
-
-def generate_gam_code():
+def string_to_IndexedBase(s):
+    return IndexedBase(s)
+        
+def create_layer_sympy_var_and_maps(layer_prop=['z','kz','kh','et', 'mv','surz','vacz']):    
+    #http://www.daniweb.com/software-development/python/threads/111526/setting-a-string-as-a-variable-name    
     m = IndexedBase('m')
-    mvt = IndexedBase('mvt')
-    mvb = IndexedBase('mvb')
-    zt = IndexedBase('zt')
-    zb = IndexedBase('zb')
-    z = Symbol('z')
-    
     i = Idx('i')
     j = Idx('j')
+    var('z, mi, mj')
     layer = Idx('layer')
+
+    suffix={'t':'top','b': 'bot'}        
+    prop_map = {}
+    linear_expressions ={}
     
+    prop_map['mi'] = m[i]
+    prop_map['mj'] = m[j]
     
-    mi = Symbol('mi')
-    mj = Symbol('mj')
-    ztop = Symbol('ztop')
-    zbot = Symbol('zbot')
-    mvtop = Symbol('mvtop')
-    mvbot = Symbol('mvbot')
-        
-    mv = linear(z, ztop, mvtop, zbot, mvbot)
+    for prop in layer_prop:            
+        for s1, s3 in suffix.iteritems():
+            vars()[prop + s1] = string_to_IndexedBase(prop + s1)            
+            var(prop + s3)                        
+            prop_map[prop + s3] = vars()[prop + s1][layer]        
+        linear_expressions[prop]=linear(z, ztop, eval(prop+suffix['t']), zbot, eval(prop+suffix['b']))
+    return (prop_map, linear_expressions)
     
-    #fdiag = integrate(mv * phi(m[i], z) * phi(m[i], z), z)
-    fdiag = integrate(mv * phi(mi, z) * phi(mi, z), z)
-    fdiag = fdiag.subs([
-                        [ztop, zt[layer]], 
-                        [mvtop, mvt[layer]],
-                        [zbot, zb[layer]],
-                        [mvbot, mvb[layer]]
-                        ])
-    fdiag = fdiag.subs([[mi,m[i]],[mj,m[j]]])                        
-    fdiag = fdiag.subs(z, zb[layer]) - fdiag.subs(z, zt[layer])
+def generate_gam_code():
     
-    #foff = integrate(phi(m[i], z) * phi(m[j], z), z)
-    foff = integrate(mv * phi(mi, z) * phi(mj, z), z)
-    foff = foff.subs([
-                        [ztop, zt[layer]], 
-                        [mvtop, mvt[layer]],
-                        [zbot, zb[layer]],
-                        [mvbot, mvb[layer]]
-                        ]) 
-    foff = foff.subs([[mi,m[i]],[mj,m[j]]])    
-    foff = foff.subs(z, zb[layer])-foff.subs(z, zt[layer])
+    mp, p = create_layer_sympy_var_and_maps(layer_prop=['z','kz','kh','et', 'mv','surz','vacz'])
+    
+    fdiag = integrate(p['mv'] * phi(mi, z) * phi(mi, z), z)    
+    fdiag = fdiag.subs(z, mp['zbot']) - fdiag.subs(z, mp['ztop'])
+    fdiag = fdiag.subs(mp)
+    
+    foff = integrate(p['mv'] * phi(mj, z) * phi(mi, z), z)  
+    foff = foff.subs(z, mp['zbot']) - foff.subs(z, mp['ztop'])
+    foff = foff.subs(mp)
     
     text = """def make_gam(m, mvt, mvb, zt, zb):
-    import numpy
+    import numpy.zeros
     from math import sin, cos
     
     neig = len(m)
@@ -157,10 +148,14 @@ def generate_psi_code():
     return fn
 
 
+#def runtest():
+    
+    
 if __name__ == '__main__':
-    print(generate_gam_code())
-    print
+    print(generate_gam_code())    
     #print(generate_psi_code())
+
+        
     
 #==============================================================================
 # from sympy import symbols
