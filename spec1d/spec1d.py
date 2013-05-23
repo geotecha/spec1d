@@ -17,7 +17,7 @@
 #==============================================================================
 """Equations for one dimesnional spectral consolidation
     
-    """
+"""
 
 from __future__ import division
 
@@ -25,7 +25,7 @@ def m_func(i, boundary=0):
     """Sine series eigenvalue of boundary value problem on [0, 1]
     
     
-    `i`th eigenvalue, M,  of f(x) = sin(M*x) that satisfies:
+    `i` th eigenvalue, M,  of f(x) = sin(M*x) that satisfies:
         f(0) = 0, f(1) = 0; for `boundary` = 0 i.e. PTPB
         f(0) = 0; f'(1) = 0; for `boundary` = 1 i.e. PTIB
         
@@ -41,7 +41,7 @@ def m_func(i, boundary=0):
     Returns
     -------
     out : float
-        returns the `i'th eigenvalue
+        returns the `i` th eigenvalue
         
     """    
     from math import pi    
@@ -66,7 +66,7 @@ def make_gam(m, mvt, mvb, zt, zb):
     mvb : list of float
         volume compressibility at bottom of each layer        
     zt : list of float
-        normalised depth or z-coordinate at top of each layer. 'zt[0]' = 0
+        normalised depth or z-coordinate at top of each layer. `zt[0]` = 0
     zb : list of float
         normalised depth or z-coordinate at bottom of each layer. `zt[-1]` = 1
              
@@ -81,24 +81,21 @@ def make_gam(m, mvt, mvb, zt, zb):
     
     Notes
     -----
-    The :math:`\mathbf{\Gamma}` matrix arises when integrating the depth 
+    The :math:`\\mathbf{\\Gamma}` matrix arises when integrating the depth 
     dependant volume compressibility (:math:`m_v` against the spectral basis 
     functions:
     
-    .. math:: \mathbf{\Gamma}_{i,j}=\int_{0}^1{\frac{m_v}{\overline{m}_v}\phi_i\phi_j\,dZ}
+    .. math:: \\mathbf{\\Gamma}_{i,j}=\\int_{0}^1{\\frac{m_v}{\\overline{m}_v}\\phi_i\\phi_j\\,dZ}
     
-    And even use a greek symbol like :math:`omega` inline.
-
+    """
     
-        
-    """    
-    import numpy.zeros
+    from numpy import zeros
     from math import sin, cos
     
     neig = len(m)
     nlayers = len(zt)
     
-    gam = numpy.zeros([neig, neig], float)        
+    gam = zeros([neig, neig], float)        
     for layer in range(nlayers):
         for i in range(neig):
             gam[i, i] += -mvb[layer]*(4*zb[layer]*m[i]**2 - 4*zt[layer]*m[i]**2)**(-1)*cos(m[i]*zb[layer])**2 + mvb[layer]*(4*zb[layer]*m[i]**2 - 4*zt[layer]*m[i]**2)**(-1)*cos(m[i]*zt[layer])**2 - 2*mvb[layer]*m[i]*(4*zb[layer]*m[i]**2 - 4*zt[layer]*m[i]**2)**(-1)*zb[layer]*cos(m[i]*zb[layer])*sin(m[i]*zb[layer]) + 2*mvb[layer]*m[i]*(4*zb[layer]*m[i]**2 - 4*zt[layer]*m[i]**2)**(-1)*zt[layer]*cos(m[i]*zt[layer])*sin(m[i]*zt[layer]) + mvb[layer]*m[i]**2*(4*zb[layer]*m[i]**2 - 4*zt[layer]*m[i]**2)**(-1)*zb[layer]**2*sin(m[i]*zb[layer])**2 + mvb[layer]*m[i]**2*(4*zb[layer]*m[i]**2 - 4*zt[layer]*m[i]**2)**(-1)*zb[layer]**2*cos(m[i]*zb[layer])**2 - mvb[layer]*m[i]**2*(4*zb[layer]*m[i]**2 - 4*zt[layer]*m[i]**2)**(-1)*zt[layer]**2*sin(m[i]*zt[layer])**2 - mvb[layer]*m[i]**2*(4*zb[layer]*m[i]**2 - 4*zt[layer]*m[i]**2)**(-1)*zt[layer]**2*cos(m[i]*zt[layer])**2 + mvt[layer]*(4*zb[layer]*m[i]**2 - 4*zt[layer]*m[i]**2)**(-1)*cos(m[i]*zb[layer])**2 - mvt[layer]*(4*zb[layer]*m[i]**2 - 4*zt[layer]*m[i]**2)**(-1)*cos(m[i]*zt[layer])**2 + 2*mvt[layer]*m[i]*(4*zb[layer]*m[i]**2 - 4*zt[layer]*m[i]**2)**(-1)*zb[layer]*cos(m[i]*zb[layer])*sin(m[i]*zb[layer]) - 2*mvt[layer]*m[i]*(4*zb[layer]*m[i]**2 - 4*zt[layer]*m[i]**2)**(-1)*zt[layer]*cos(m[i]*zt[layer])*sin(m[i]*zt[layer]) - mvt[layer]*m[i]**2*(4*zb[layer]*m[i]**2 - 4*zt[layer]*m[i]**2)**(-1)*zb[layer]**2*sin(m[i]*zb[layer])**2 - mvt[layer]*m[i]**2*(4*zb[layer]*m[i]**2 - 4*zt[layer]*m[i]**2)**(-1)*zb[layer]**2*cos(m[i]*zb[layer])**2 + mvt[layer]*m[i]**2*(4*zb[layer]*m[i]**2 - 4*zt[layer]*m[i]**2)**(-1)*zt[layer]**2*sin(m[i]*zt[layer])**2 + mvt[layer]*m[i]**2*(4*zb[layer]*m[i]**2 - 4*zt[layer]*m[i]**2)**(-1)*zt[layer]**2*cos(m[i]*zt[layer])**2 - 2*zb[layer]*mvt[layer]*m[i]*(4*zb[layer]*m[i]**2 - 4*zt[layer]*m[i]**2)**(-1)*cos(m[i]*zb[layer])*sin(m[i]*zb[layer]) + 2*zb[layer]*mvt[layer]*m[i]*(4*zb[layer]*m[i]**2 - 4*zt[layer]*m[i]**2)**(-1)*cos(m[i]*zt[layer])*sin(m[i]*zt[layer]) + 2*zb[layer]*mvt[layer]*m[i]**2*(4*zb[layer]*m[i]**2 - 4*zt[layer]*m[i]**2)**(-1)*zb[layer]*sin(m[i]*zb[layer])**2 + 2*zb[layer]*mvt[layer]*m[i]**2*(4*zb[layer]*m[i]**2 - 4*zt[layer]*m[i]**2)**(-1)*zb[layer]*cos(m[i]*zb[layer])**2 - 2*zb[layer]*mvt[layer]*m[i]**2*(4*zb[layer]*m[i]**2 - 4*zt[layer]*m[i]**2)**(-1)*zt[layer]*sin(m[i]*zt[layer])**2 - 2*zb[layer]*mvt[layer]*m[i]**2*(4*zb[layer]*m[i]**2 - 4*zt[layer]*m[i]**2)**(-1)*zt[layer]*cos(m[i]*zt[layer])**2 + 2*zt[layer]*mvb[layer]*m[i]*(4*zb[layer]*m[i]**2 - 4*zt[layer]*m[i]**2)**(-1)*cos(m[i]*zb[layer])*sin(m[i]*zb[layer]) - 2*zt[layer]*mvb[layer]*m[i]*(4*zb[layer]*m[i]**2 - 4*zt[layer]*m[i]**2)**(-1)*cos(m[i]*zt[layer])*sin(m[i]*zt[layer]) - 2*zt[layer]*mvb[layer]*m[i]**2*(4*zb[layer]*m[i]**2 - 4*zt[layer]*m[i]**2)**(-1)*zb[layer]*sin(m[i]*zb[layer])**2 - 2*zt[layer]*mvb[layer]*m[i]**2*(4*zb[layer]*m[i]**2 - 4*zt[layer]*m[i]**2)**(-1)*zb[layer]*cos(m[i]*zb[layer])**2 + 2*zt[layer]*mvb[layer]*m[i]**2*(4*zb[layer]*m[i]**2 - 4*zt[layer]*m[i]**2)**(-1)*zt[layer]*sin(m[i]*zt[layer])**2 + 2*zt[layer]*mvb[layer]*m[i]**2*(4*zb[layer]*m[i]**2 - 4*zt[layer]*m[i]**2)**(-1)*zt[layer]*cos(m[i]*zt[layer])**2

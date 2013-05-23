@@ -20,21 +20,35 @@ subroutines"""
 
 from __future__ import division
 
-from sympy import Symbol, sin, cos, integrate, diff, var, symbols, Function, simplify
+
+from sympy import Symbol, sin, cos, integrate, diff, var, symbols, simplify
  
 from sympy.tensor import IndexedBase, Idx
 
 
+
 def linear(x, x1, y1, x2, y2):
+    """Interpolation between two points.
+
+    """
     return (y2 - y1)/(x2 - x1) * (x-x1) + y1
     
 def phi(m,z):
+    """phi function
+
+    """
     return sin(m*z)
 
 def string_to_IndexedBase(s):
+    """turn string into IndexedBase
+
+    """
     return IndexedBase(s)
         
-def create_layer_sympy_var_and_maps(layer_prop=['z','kz','kh','et', 'mv','surz','vacz']):    
+def create_layer_sympy_var_and_maps(layer_prop=['z','kz','kh','et', 'mv','surz','vacz']):
+    """Create sympy variables and maps for use with integrating to generate 1d spectral equations.
+
+    """
     #http://www.daniweb.com/software-development/python/threads/111526/setting-a-string-as-a-variable-name    
     m = IndexedBase('m')
     i = Idx('i')
@@ -58,7 +72,9 @@ def create_layer_sympy_var_and_maps(layer_prop=['z','kz','kh','et', 'mv','surz',
     return (prop_map, linear_expressions)
     
 def generate_gam_code():
-    
+    """Perform integrations and output a function that will generate gam.
+
+    """
     mp, p = create_layer_sympy_var_and_maps(layer_prop=['z','kz','kh','et', 'mv','surz','vacz'])
     
     fdiag = integrate(p['mv'] * phi(mi, z) * phi(mi, z), z)    
@@ -97,6 +113,9 @@ def generate_gam_code():
     return fn
 
 def generate_psi_code():
+    """make make_psi function
+
+    """
     m = IndexedBase('m')
     kvt = IndexedBase('kvt')
     kvb = IndexedBase('kvb')
@@ -154,7 +173,7 @@ def generate_psi_code():
 if __name__ == '__main__':
     print(generate_gam_code())    
     #print(generate_psi_code())
-
+    pass
         
     
 #==============================================================================

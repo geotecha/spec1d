@@ -18,4 +18,5 @@ Ideas developed from [#]_, [#]_, [#]_, [#]_.
 .. [#] Walker, R., and B. Indraratna. 2009. 'Consolidation Analysis of a Stratified Soil with Vertical and Horizontal Drainage Using the Spectral Method'. Geotechnique 59 (5): 439-449.
 .. [#] Walker, Rohan, Buddhima Indraratna, and Nagaratnam Sivakugan. 2009. 'Vertical and Radial Consolidation Analysis of Multilayered Soil Using the Spectral Method'. Journal of Geotechnical and Geoenvironmental Engineering 135 (5): 657-663
 .. [#] Walker, Rohan T. 2011. 'Vertical Drain Consolidation Analysis in One, Two and Three Dimensions'. Computers and Geotechnics 38 (8): 1069-1077.
-"""
+
+

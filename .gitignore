@@ -12,3 +12,6 @@
 
 # License header for each source file
 LICENSE_header.txt
+
+# auto document folder
+/docs/auto
