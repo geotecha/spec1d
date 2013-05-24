@@ -25,8 +25,7 @@ from nose import with_setup
 from nose.tools.trivial import assert_almost_equal, assert_raises, ok_
 import numpy as np
 
-from spec1d.spec1d import m_func
-from spec1d.spec1d import make_gam
+from spec1d.spec1d import m_func, make_gam, make_psi
 
 ### start Method 1: global vars 
 ###     (not recommended as it uses global variables)
@@ -149,35 +148,49 @@ class test_make_gam(object):
         self.gam_isotropic = np.array([[0.5, 0], [0, 0.5]])
         
         self.cases = [            
-            [{'m': self.PTIB, 'zt': [0], 'zb': [1], 'mvt': [1], 'mvb': [1]},
+            
+            ['mv const, PTIB', 
+             {'m': self.PTIB, 'zt': [0], 'zb': [1], 'mvt': [1], 'mvb': [1]}, 
              self.gam_isotropic],
-            [{'m': self.PTPB, 'zt': [0], 'zb': [1], 'mvt': [1], 'mvb': [1]},
+            ['mv const, PTPB', 
+             {'m': self.PTPB, 'zt': [0], 'zb': [1], 'mvt': [1], 'mvb': [1]},
              self.gam_isotropic],
-             
-            [{'m': self.PTIB, 'zt': [0], 'zb': [1], 'mvt': [2], 'mvb': [2]},
+            
+            ['mv const *2, PTIB', 
+             {'m': self.PTIB, 'zt': [0], 'zb': [1], 'mvt': [2], 'mvb': [2]}, 
              self.gam_isotropic * 2],
-            [{'m': self.PTPB, 'zt': [0], 'zb': [1], 'mvt': [2], 'mvb': [2]},
+            ['mv const *2, PTPB', 
+             {'m': self.PTPB, 'zt': [0], 'zb': [1], 'mvt': [2], 'mvb': [2]},
              self.gam_isotropic * 2],
              
-            [{'m': self.PTIB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'mvt': [1, 1], 'mvb': [1, 1]},
+            ['mv const, 2 layers, PTIB', 
+             {'m': self.PTIB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'mvt': [1, 1], 'mvb': [1, 1]}, 
              self.gam_isotropic],
-            [{'m': self.PTPB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'mvt': [1, 1], 'mvb': [1, 1]},
+            ['mv const, 2 layers, PTPB', 
+             {'m': self.PTPB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'mvt': [1, 1], 'mvb': [1, 1]},
              self.gam_isotropic], 
             
-            [{'m': self.PTIB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'mvt': [2, 2], 'mvb': [2, 2]},
+            ['mv const*2, 2 layers, PTIB', 
+             {'m': self.PTIB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'mvt': [2, 2], 'mvb': [2, 2]}, 
              self.gam_isotropic * 2],
-            [{'m': self.PTPB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'mvt': [2, 2], 'mvb': [2, 2]},
+            ['mv const*2, 2 layers, PTPB', 
+             {'m': self.PTPB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'mvt': [2, 2], 'mvb': [2, 2]},
              self.gam_isotropic * 2],
-             
-            [{'m': self.PTIB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'mvt': [1, 0.5], 'mvb': [1, 0.5]},
+            #mv 2 layers, const within each layer 
+            ['mv 2 layers, const within each layer, PTIB', 
+             {'m': self.PTIB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'mvt': [1, 0.5], 'mvb': [1, 0.5]}, 
              np.array([[0.274317, 0.052295], [0.052295, 0.3655915]])],
-            [{'m': self.PTPB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'mvt': [1, 0.5], 'mvb': [1, 0.5]},
+            ['mv 2 layers, const within each layer, PTPB', 
+             {'m': self.PTPB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'mvt': [1, 0.5], 'mvb': [1, 0.5]},
              np.array([[0.326612767905, 0.0912741609272], [0.0912741609272, 0.368920668216]])],
-
+            
+            
             #from speccon vba : debug.Print ("[[" & gammat(1,1) & ", " & gammat(1,2) & "],[" & gammat(2,1) & ", " & gammat(2,2) & "]]")
-            [{'m': self.PTIB, 'zt': [0], 'zb': [1], 'mvt': [1], 'mvb': [2]},
+            ['mv linear within one layer, PTIB', 
+             {'m': self.PTIB, 'zt': [0], 'zb': [1], 'mvt': [1], 'mvb': [2]}, 
              np.array([[0.851321183642337, -0.101321183642336],[-0.101321183642336, 0.761257909293592]])],
-            [{'m': self.PTPB, 'zt': [0], 'zb': [1], 'mvt': [1], 'mvb': [2]},
+            ['mv linear within one layer, PTPB', 
+             {'m': self.PTPB, 'zt': [0], 'zb': [1], 'mvt': [1], 'mvb': [2]},
              np.array([[0.750000000000001, -9.00632743487448E-02],[-9.00632743487448E-02, 0.750000000000001]])]
             ]
         
@@ -187,14 +200,270 @@ class test_make_gam(object):
     ### a generator example
     def test_cases(self):   
         """loop through and test make_gam cases with numpy.allclose"""
-        for fixture, result in self.cases:            
+        for desc, fixture, result in self.cases:            
             gam = make_gam(**fixture)
             check = np.allclose(gam, result)
             msg = """\
-failed test_make_gam, case:
+failed test_make_gam, case: %s
 %s
 gam:
 %s
 expected:
-%s""" % (fixture, gam, result)
+%s""" % (desc, fixture, gam, result)
             yield ok_, check, msg
+            
+            
+            
+class test_make_psi(object):
+    """A suite of tests for the make_psi function        
+    """
+    
+    def __init__(self):        
+        self.PTPB = m_func(np.arange(2),0)
+        self.PTIB = m_func(np.arange(2),1)
+        
+        self.psi_iso_v_only_PTIB = 0.5 * np.array([[(np.pi/2.0)**2.0, 0], [0, (3.0*np.pi/2.0)**2.0]])
+        self.psi_iso_v_only_PTPB = 0.5 * np.array([[(np.pi)**2.0, 0], [0, (2.0*np.pi)**2.0]])
+        self.psi_kh_iso = np.array([[0.5, 0], [0, 0.5]])
+        
+        self.cases = [     
+            #kv
+            ['kv const, PTIB', 
+             {'m': self.PTIB, 'zt': [0], 'zb': [1], 'kvt': [1], 'kvb': [1],
+              'kht': [1], 'khb':[1], 'ett': [0], 'etb': [0], 'dT': 1.0, 'dTv': 1.0, 'dTh': 1.0},
+             self.psi_iso_v_only_PTIB], 
+            ['kv const, PTPB', 
+             {'m': self.PTPB, 'zt': [0], 'zb': [1], 'kvt': [1], 'kvb': [1],
+              'kht': [1], 'khb':[1], 'ett': [0], 'etb': [0], 'dT': 1.0, 'dTv': 1.0, 'dTh': 1.0},
+             self.psi_iso_v_only_PTPB],
+            
+            ['kv const*2, PTIB', 
+             {'m': self.PTIB, 'zt': [0], 'zb': [1], 'kvt': [2], 'kvb': [2],
+              'kht': [1], 'khb':[1], 'ett': [0], 'etb': [0], 'dT': 1.0, 'dTv': 1.0, 'dTh': 1.0}, 
+             self.psi_iso_v_only_PTIB*2], 
+            ['kv const*2, PTPB', 
+             {'m': self.PTPB, 'zt': [0], 'zb': [1], 'kvt': [2], 'kvb': [2],
+              'kht': [1], 'khb':[1], 'ett': [0], 'etb': [0], 'dT': 1.0, 'dTv': 1.0, 'dTh': 1.0},
+             self.psi_iso_v_only_PTPB*2],
+            
+            ['kv const, dTv*2, PTIB', 
+             {'m': self.PTIB, 'zt': [0], 'zb': [1], 'kvt': [1], 'kvb': [1],
+              'kht': [1], 'khb':[1], 'ett': [0], 'etb': [0], 'dT': 1.0, 'dTv': 2.0, 'dTh': 1.0}, 
+             self.psi_iso_v_only_PTIB * 2], 
+            ['kv const, dTv*2, PTPB', 
+             {'m': self.PTPB, 'zt': [0], 'zb': [1], 'kvt': [1], 'kvb': [1],
+              'kht': [1], 'khb':[1], 'ett': [0], 'etb': [0], 'dT': 1.0, 'dTv': 2.0, 'dTh': 1.0},
+             self.psi_iso_v_only_PTPB * 2],
+            
+            ['kv const, dT*0.5, PTIB', 
+             {'m': self.PTIB, 'zt': [0], 'zb': [1], 'kvt': [1], 'kvb': [1],
+              'kht': [1], 'khb':[1], 'ett': [0], 'etb': [0], 'dT': 0.5, 'dTv': 1.0, 'dTh': 1.0}, 
+             self.psi_iso_v_only_PTIB * 2], 
+            ['kv const, dT*0.5, PTPB', 
+             {'m': self.PTPB, 'zt': [0], 'zb': [1], 'kvt': [1], 'kvb': [1],
+              'kht': [1], 'khb':[1], 'ett': [0], 'etb': [0], 'dT': 0.5, 'dTv': 1.0, 'dTh': 1.0},
+             self.psi_iso_v_only_PTPB * 2], 
+            
+            ['kv const, 2 layers, PTIB', 
+             {'m': self.PTIB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'kvt': [1, 1], 'kvb': [1, 1],
+              'kht': [1, 1], 'khb':[1, 1], 'ett': [0, 0], 'etb': [0, 0], 'dT': 1.0, 'dTv': 1.0, 'dTh': 1.0},
+             self.psi_iso_v_only_PTIB], 
+            ['kv const, 2 layers, PTPB', 
+             {'m': self.PTPB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'kvt': [1, 1], 'kvb': [1, 1],
+              'kht': [1, 1], 'khb':[1, 1], 'ett': [0, 0], 'etb': [0, 0], 'dT': 1.0, 'dTv': 1.0, 'dTh': 1.0},
+             self.psi_iso_v_only_PTPB],
+            
+            ['kv const*2, 2 layers, PTIB', 
+             {'m': self.PTIB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'kvt': [2, 2], 'kvb': [2, 2],
+              'kht': [1, 1], 'khb':[1, 1], 'ett': [0, 0], 'etb': [0, 0], 'dT': 1.0, 'dTv': 1.0, 'dTh': 1.0},
+             self.psi_iso_v_only_PTIB * 2], 
+            ['kv const*2, 2 layers, PTPB', 
+             {'m': self.PTPB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'kvt': [2, 2], 'kvb': [2, 2],
+              'kht': [1, 1], 'khb':[1, 1], 'ett': [0, 0], 'etb': [0, 0], 'dT': 1.0, 'dTv': 1.0, 'dTh': 1.0},
+             self.psi_iso_v_only_PTPB * 2], 
+            
+            ['2 layers, kv const within eachlayer, PTIB', 
+             {'m': self.PTIB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'kvt': [1, 2], 'kvb': [1, 2],
+              'kht': [1, 1], 'khb':[1, 1], 'ett': [0, 0], 'etb': [0, 0], 'dT': 1.0, 'dTv': 1.0, 'dTh': 1.0},
+             np.array([[1.60044185963,  -1.466671155],[-1.466671155, 18.4577561084]])], 
+            ['2 layers, kv const within eachlayer, PTPB',
+             {'m': self.PTPB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'kvt': [1, 2], 'kvb': [1, 2],
+              'kht': [1, 1], 'khb':[1, 1], 'ett': [0, 0], 'etb': [0, 0], 'dT': 1.0, 'dTv': 1.0, 'dTh': 1.0},
+             np.array([[ 7.43403806325, -2.37230488791], [-2.37230488791,  33.0766501659]])], 
+             
+            ['kv linear within one layer, PTIB', 
+             {'m': self.PTIB, 'zt': [0], 'zb': [1], 'kvt': [1], 'kvb': [2],
+              'kht': [1], 'khb':[1], 'ett': [0], 'etb': [0], 'dT': 1.0, 'dTv': 1.0, 'dTh': 1.0},
+             np.array([[1.60055082520425, -0.75],[-0.75, 16.4049574268382]])], 
+            ['kv linear within one layer, PTPB', 
+             {'m': self.PTPB, 'zt': [0], 'zb': [1], 'kvt': [1], 'kvb': [2],
+              'kht': [1], 'khb':[1], 'ett': [0], 'etb': [0], 'dT': 1.0, 'dTv': 1.0, 'dTh': 1.0},
+             np.array([[7.40220330081701, -2.22222222222222],[-2.22222222222222, 29.6088132032681]])], 
+
+            #kh
+            ['kh const, PTIB', 
+             {'m': self.PTIB, 'zt': [0], 'zb': [1], 'kvt': [0], 'kvb': [0],
+              'kht': [1], 'khb':[1], 'ett': [1], 'etb': [1], 'dT': 1.0, 'dTv': 0, 'dTh': 1.0},
+             self.psi_kh_iso], 
+            ['kh const, PTPB', 
+             {'m': self.PTPB, 'zt': [0], 'zb': [1], 'kvt': [0], 'kvb': [0],
+              'kht': [1], 'khb':[1], 'ett': [1], 'etb': [1], 'dT': 1.0, 'dTv': 0, 'dTh': 1.0},
+             self.psi_kh_iso], 
+            
+            ['kh const*2, PTIB', 
+             {'m': self.PTIB, 'zt': [0], 'zb': [1], 'kvt': [0], 'kvb': [0],
+              'kht': [2], 'khb':[2], 'ett': [1], 'etb': [1], 'dT': 1.0, 'dTv': 0, 'dTh': 1.0},
+             self.psi_kh_iso*2], 
+            ['kh const*2, PTPB', 
+             {'m': self.PTPB, 'zt': [0], 'zb': [1], 'kvt': [0], 'kvb': [0],
+              'kht': [2], 'khb':[2], 'ett': [1], 'etb': [1], 'dT': 1.0, 'dTv': 0, 'dTh': 1.0},
+             self.psi_kh_iso*2],
+             
+            ['kh const,dTh*2 PTIB', 
+             {'m': self.PTIB, 'zt': [0], 'zb': [1], 'kvt': [0], 'kvb': [0],
+              'kht': [1], 'khb':[1], 'ett': [1], 'etb': [1], 'dT': 1.0, 'dTv': 0, 'dTh': 2.0},
+             self.psi_kh_iso*2], 
+            ['kh const, dTh*2 PTPB', 
+             {'m': self.PTPB, 'zt': [0], 'zb': [1], 'kvt': [0], 'kvb': [0],
+              'kht': [1], 'khb':[1], 'ett': [1], 'etb': [1], 'dT': 1.0, 'dTv': 0, 'dTh': 2.0},
+             self.psi_kh_iso*2],
+             
+            ['kh const,dT*0.5 PTIB', 
+             {'m': self.PTIB, 'zt': [0], 'zb': [1], 'kvt': [0], 'kvb': [0],
+              'kht': [1], 'khb':[1], 'ett': [1], 'etb': [1], 'dT': 0.5, 'dTv': 0, 'dTh': 1.0},
+             self.psi_kh_iso*2], 
+            ['kh const, dT*0.5 PTPB', 
+             {'m': self.PTPB, 'zt': [0], 'zb': [1], 'kvt': [0], 'kvb': [0],
+              'kht': [1], 'khb':[1], 'ett': [1], 'etb': [1], 'dT': 0.5, 'dTv': 0, 'dTh': 1},
+             self.psi_kh_iso*2],
+            
+            ['kh const, 2 layers PTIB', 
+             {'m': self.PTIB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'kvt': [0, 0], 'kvb': [0, 0],
+              'kht': [1, 1], 'khb':[1, 1], 'ett': [1, 1], 'etb': [1, 1], 'dT': 1.0, 'dTv': 0, 'dTh': 1.0},
+             self.psi_kh_iso], 
+            ['kh const, 2 layers, PTPB', 
+             {'m': self.PTPB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'kvt': [0, 0], 'kvb': [0, 0],
+              'kht': [1, 1], 'khb':[1, 1], 'ett': [1, 1], 'etb': [1, 1], 'dT': 1.0, 'dTv': 0, 'dTh': 1.0},
+             self.psi_kh_iso],
+             
+            ['kh 2 layers, const within each layer, PTIB', 
+             {'m': self.PTIB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'kvt': [0, 0], 'kvb': [0, 0],
+              'kht': [1, 2], 'khb':[1, 2], 'ett': [1, 1], 'etb': [1, 1], 'dT': 1.0, 'dTv': 0, 'dTh': 1.0},
+             np.array([[ 0.951365345728, -0.104590881539], [-0.104590881539,  0.768817023874]])], 
+            ['kh 2 layers, const within each layer, PTPB', 
+             {'m': self.PTPB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'kvt': [0, 0], 'kvb': [0, 0],
+              'kht': [1, 2], 'khb':[1, 2], 'ett': [1, 1], 'etb': [1, 1], 'dT': 1.0, 'dTv': 0, 'dTh': 1.0},
+             np.array([[ 0.846774464189, -0.182548321854], [-0.182548321854, 0.762158663568]])], 
+             
+            ['kh linear within 1 layer, PTIB', 
+             {'m': self.PTIB, 'zt': [0], 'zb': [1], 'kvt': [0], 'kvb': [0],
+              'kht': [1], 'khb':[2], 'ett': [1], 'etb': [1], 'dT': 1.0, 'dTv': 0, 'dTh': 1.0},
+             np.array([[3.65373530636564, -9.00632743487443E-02],[-9.00632743487443E-02, 12.3649412254626]])], 
+            ['kh linear within 1 layer, PTPB', 
+             {'m': self.PTPB, 'zt': [0], 'zb': [1], 'kvt': [0], 'kvb': [0],
+              'kht': [1], 'khb':[2], 'ett': [1], 'etb': [1], 'dT': 1.0, 'dTv': 0, 'dTh': 1.0},
+             np.array([[3.65373530636564, -9.00632743487443E-02],[-9.00632743487443E-02, 12.3649412254626]])], 
+            
+            #et, originally Walker Phd kh and et were lumped together.  
+            #Therefore once separated varying one parameter while keeping 
+            #the other constant, then changing which parameter alters should
+            #yiueld the same result. Hence reusing the kh results.
+            ['et const, PTIB', 
+             {'m': self.PTIB, 'zt': [0], 'zb': [1], 'kvt': [0], 'kvb': [0],
+              'kht': [1], 'khb':[1], 'ett': [1], 'etb': [1], 'dT': 1.0, 'dTv': 0, 'dTh': 1.0},
+             self.psi_kh_iso], 
+            ['et const, PTPB', 
+             {'m': self.PTPB, 'zt': [0], 'zb': [1], 'kvt': [0], 'kvb': [0],
+              'kht': [1], 'khb':[1], 'ett': [1], 'etb': [1], 'dT': 1.0, 'dTv': 0, 'dTh': 1.0},
+             self.psi_kh_iso], 
+            
+            ['et const*2, PTIB', 
+             {'m': self.PTIB, 'zt': [0], 'zb': [1], 'kvt': [0], 'kvb': [0],
+              'kht': [2], 'khb':[2], 'ett': [1], 'etb': [1], 'dT': 1.0, 'dTv': 0, 'dTh': 1.0},
+             self.psi_kh_iso*2], 
+            ['et const*2, PTPB', 
+             {'m': self.PTPB, 'zt': [0], 'zb': [1], 'kvt': [0], 'kvb': [0],
+              'kht': [1], 'khb':[1], 'ett': [2], 'etb': [2], 'dT': 1.0, 'dTv': 0, 'dTh': 1.0},
+             self.psi_kh_iso*2],
+             
+            ['et const,dTh*2 PTIB', 
+             {'m': self.PTIB, 'zt': [0], 'zb': [1], 'kvt': [0], 'kvb': [0],
+              'kht': [1], 'khb':[1], 'ett': [1], 'etb': [1], 'dT': 1.0, 'dTv': 0, 'dTh': 2.0},
+             self.psi_kh_iso*2], 
+            ['et const, dTh*2 PTPB', 
+             {'m': self.PTPB, 'zt': [0], 'zb': [1], 'kvt': [0], 'kvb': [0],
+              'kht': [1], 'khb':[1], 'ett': [1], 'etb': [1], 'dT': 1.0, 'dTv': 0, 'dTh': 2.0},
+             self.psi_kh_iso*2],
+             
+            ['et const,dT*0.5 PTIB', 
+             {'m': self.PTIB, 'zt': [0], 'zb': [1], 'kvt': [0], 'kvb': [0],
+              'kht': [1], 'khb':[1], 'ett': [1], 'etb': [1], 'dT': 0.5, 'dTv': 0, 'dTh': 1.0},
+             self.psi_kh_iso*2], 
+            ['et const, dT*0.5 PTPB', 
+             {'m': self.PTPB, 'zt': [0], 'zb': [1], 'kvt': [0], 'kvb': [0],
+              'kht': [1], 'khb':[1], 'ett': [1], 'etb': [1], 'dT': 0.5, 'dTv': 0, 'dTh': 1},
+             self.psi_kh_iso*2],
+            
+            ['et const, 2 layers PTIB', 
+             {'m': self.PTIB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'kvt': [0, 0], 'kvb': [0, 0],
+              'kht': [1, 1], 'khb':[1, 1], 'ett': [1, 1], 'etb': [1, 1], 'dT': 1.0, 'dTv': 0, 'dTh': 1.0},
+             self.psi_kh_iso], 
+            ['et const, 2 layers, PTPB', 
+             {'m': self.PTPB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'kvt': [0, 0], 'kvb': [0, 0],
+              'kht': [1, 1], 'khb':[1, 1], 'ett': [1, 1], 'etb': [1, 1], 'dT': 1.0, 'dTv': 0, 'dTh': 1.0},
+             self.psi_kh_iso],
+             
+            ['et 2 layers, const within each layer, PTIB', 
+             {'m': self.PTIB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'kvt': [0, 0], 'kvb': [0, 0],
+              'kht': [1, 1], 'khb':[1, 1], 'ett': [1, 2], 'etb': [1, 2], 'dT': 1.0, 'dTv': 0, 'dTh': 1.0},
+             np.array([[ 0.951365345728, -0.104590881539], [-0.104590881539,  0.768817023874]])], 
+            ['et 2 layers, const within each layer, PTPB', 
+             {'m': self.PTPB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'kvt': [0, 0], 'kvb': [0, 0],
+              'kht': [1, 1], 'khb':[1, 1], 'ett': [1, 2], 'etb': [1, 2], 'dT': 1.0, 'dTv': 0, 'dTh': 1.0},
+             np.array([[ 0.846774464189, -0.182548321854], [-0.182548321854, 0.762158663568]])], 
+             
+            ['et linear within 1 layer, PTIB', 
+             {'m': self.PTIB, 'zt': [0], 'zb': [1], 'kvt': [0], 'kvb': [0],
+              'kht': [1], 'khb':[1], 'ett': [1], 'etb': [2], 'dT': 1.0, 'dTv': 0, 'dTh': 1.0},
+             np.array([[3.65373530636564, -9.00632743487443E-02],[-9.00632743487443E-02, 12.3649412254626]])], 
+            ['et linear within 1 layer, PTPB', 
+             {'m': self.PTPB, 'zt': [0], 'zb': [1], 'kvt': [0], 'kvb': [0],
+              'kht': [1], 'khb':[1], 'ett': [1], 'etb': [2], 'dT': 1.0, 'dTv': 0, 'dTh': 1.0},
+             np.array([[3.65373530636564, -9.00632743487443E-02],[-9.00632743487443E-02, 12.3649412254626]])], 
+            
+            
+            
+            #mixed
+            ['kh const, et const cancel out, PTIB', 
+             {'m': self.PTIB, 'zt': [0], 'zb': [1], 'kvt': [0], 'kvb': [0],
+              'kht': [0.5], 'khb':[0.5], 'ett': [2], 'etb': [2], 'dT': 1.0, 'dTv': 0, 'dTh': 1.0},
+             self.psi_kh_iso], 
+            ['kh const, et const cancel out, PTPB', 
+             {'m': self.PTPB, 'zt': [0], 'zb': [1], 'kvt': [0], 'kvb': [0],
+              'kht': [0.5], 'khb':[0.5], 'ett': [2], 'etb': [2], 'dT': 1.0, 'dTv': 0, 'dTh': 1.0},
+             self.psi_kh_iso]
+             
+             #would be nice to have a test for both et and kh varying 
+             #linearly at the same time. I think I'll just have to trust the
+             #sympy integrations.  At least if the above tests pass I'll have 
+             #some confidence.
+
+            ]
+        
+                             
+    
+        
+    ### a generator example
+    def test_cases(self):   
+        """loop through and test make_psi cases with numpy.allclose"""
+        for desc, fixture, result in self.cases:            
+            psi = make_psi(**fixture)
+            check = np.allclose(psi, result)
+            msg = """\
+failed test_make_psi, case: %s
+%s
+psi:
+%s
+expected:
+%s""" % (desc, fixture, psi, result)
+            yield ok_, check, msg            

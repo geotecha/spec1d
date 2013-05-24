@@ -20,12 +20,7 @@ subroutines"""
 
 from __future__ import division
 
-
-from sympy import Symbol, sin, cos, integrate, diff, var, symbols, simplify
- 
-from sympy.tensor import IndexedBase, Idx
-
-
+import sympy
 
 def linear(x, x1, y1, x2, y2):
     """Interpolation between two points.
@@ -37,25 +32,63 @@ def phi(m,z):
     """phi function
 
     """
-    return sin(m*z)
+    
+    return sympy.sin(m*z)
 
 def string_to_IndexedBase(s):
-    """turn string into IndexedBase
+    """turn string into sympy.tensor.IndexedBase
 
     """
-    return IndexedBase(s)
+    
+    return sympy.tensor.IndexedBase(s)
         
-def create_layer_sympy_var_and_maps(layer_prop=['z','kz','kh','et', 'mv','surz','vacz']):
-    """Create sympy variables and maps for use with integrating to generate 1d spectral equations.
+def create_layer_sympy_var_and_maps(layer_prop=['z','kv','kh','et', 'mv',
+                                                'surz','vacz']):
+    """Create sympy variables and maps for use with integrating \
+    to generate 1d spectral equations.
+    
+    Each x in layer prop will get a 'top', and 'bot', suffix
+    Each 'xtop' will get mapped to 'xt[layer]', each 'xbot' to 'xb[layer] 
+    and added to `prop_map` dict.
+    Each s in layer prop will get a linear representation added to the 
+    `linear_expression` dict:
+        x = (xbot-xtop)/(zbot-ztop)*(z-zbot) +xtop
+    `prop_map` will also get a 'mi' to m[i], and mj to m[j] map.
+    'z, mi, mj' will become global variables
+            
+    Parameters
+    ----------
+    layer_prop : list of str, optional
+        label for properties that vary in a layer
+    
+         
+    Returns
+    -------
+    prop_map : dict
+        maps the string version of a variable to the sympy.tensor.IndexedBase 
+        version e.g. prop_map['kvtop'] = kvt[layer]
+    linear_expressions: dict
+        maps the string version of a variable to an expression describing how 
+        that varibale varies linearly within a layer    
+        
+    Examples
+    --------
+    >>> prop_map, linear_expressions = create_layer_sympy_var_and_maps(layer_prop=['
+z','kv'])
+    >>> prop_map
+    {'kvtop': kvt[layer], 'mi': m[i], 'mj': m[j], 'zbot': zb[layer], 'ztop': zt[laye
+    r], 'kvbot': kvb[layer]}
+    >>> linear_expressions
+    {'z': z, 'kv': kvtop + (kvbot - kvtop)*(z - ztop)/(zbot - ztop)}
 
     """
     #http://www.daniweb.com/software-development/python/threads/111526/setting-a-string-as-a-variable-name    
-    m = IndexedBase('m')
-    i = Idx('i')
-    j = Idx('j')
-    var('z, mi, mj')
-    layer = Idx('layer')
-
+    m = sympy.tensor.IndexedBase('m')
+    i = sympy.tensor.Idx('i')
+    j = sympy.tensor.Idx('j')
+    layer = sympy.tensor.Idx('layer')
+    
+    sympy.var('z, mi, mj')
     suffix={'t':'top','b': 'bot'}        
     prop_map = {}
     linear_expressions ={}
@@ -66,22 +99,24 @@ def create_layer_sympy_var_and_maps(layer_prop=['z','kz','kh','et', 'mv','surz',
     for prop in layer_prop:            
         for s1, s3 in suffix.iteritems():
             vars()[prop + s1] = string_to_IndexedBase(prop + s1)            
-            var(prop + s3)                        
+            sympy.var(prop + s3)                        
             prop_map[prop + s3] = vars()[prop + s1][layer]        
         linear_expressions[prop]=linear(z, ztop, eval(prop+suffix['t']), zbot, eval(prop+suffix['b']))
     return (prop_map, linear_expressions)
     
 def generate_gam_code():
-    """Perform integrations and output a function that will generate gam.
+    """Perform integrations and output a function that will generate gam (without docstring).
+    
+    Paste the resulting code (at least the loops) into make_gam.
 
     """
-    mp, p = create_layer_sympy_var_and_maps(layer_prop=['z','kz','kh','et', 'mv','surz','vacz'])
+    mp, p = create_layer_sympy_var_and_maps(layer_prop=['z','mv'])
     
-    fdiag = integrate(p['mv'] * phi(mi, z) * phi(mi, z), z)    
+    fdiag = sympy.integrate(p['mv'] * phi(mi, z) * phi(mi, z), z)    
     fdiag = fdiag.subs(z, mp['zbot']) - fdiag.subs(z, mp['ztop'])
     fdiag = fdiag.subs(mp)
     
-    foff = integrate(p['mv'] * phi(mj, z) * phi(mi, z), z)  
+    foff = sympy.integrate(p['mv'] * phi(mj, z) * phi(mi, z), z)  
     foff = foff.subs(z, mp['zbot']) - foff.subs(z, mp['ztop'])
     foff = foff.subs(mp)
     
@@ -113,53 +148,56 @@ def generate_gam_code():
     return fn
 
 def generate_psi_code():
-    """make make_psi function
+    """Perform integrations and output the function that will generate psi (without docstring).
 
+    Paste the resulting code (at least the loops) into make_psi.
     """
-    m = IndexedBase('m')
-    kvt = IndexedBase('kvt')
-    kvb = IndexedBase('kvb')
-    kht = IndexedBase('kht')
-    khb = IndexedBase('khb')
-    ett = IndexedBase('ett')
-    etb = IndexedBase('etb')
-    zt = IndexedBase('zt')
-    zb = IndexedBase('zb')
-    dTv = Symbol('z')
-    dTh = Symbol('z')
-    dT = Symbol('z')
-    
-    z = Symbol('z')
-    
-    i = Idx('i')
-    j = Idx('j')
-    layer = Idx('layer')
-    
-#    fdiag = integrate(diff(phi(m[i], z),z,2) * phi(m[i], z), z)-
-#    fdiag = #fdiag.subs(z, zb[layer]) - fdiag.subs(z, zt[layer])
-#    
-#    foff = #integrate(phi(m[i], z) * phi(m[j], z), z)
-#    foff = #fdiag.subs(z, zb[layer])-fdiag.subs(z, zt[layer])
-    
-    text = """def make_psi(m, kvt, kvb, kht, khb, ett, etb, 
-                           zt, zb, dTv, dTh = 0.0, dT = 1.0):
-        import numpy
-        neig = len(m)
-        nlayers = len(zt)
+    sympy.var('dTv, dTh, dT')    
+    mp, p = create_layer_sympy_var_and_maps(layer_prop=['z','kv','kh','et'])
         
-        psi = numpy.zeros([neig, neig], float)        
-        for layer in range(nlayer):
-            for i in range(neig - 1):
-                psi[i, i] += %s
-                for j in range(i + 1, neig):
-                    psi[i, j] += %s                
-                    
-        #psi is symmetric
-        for i in range(neig - 1):        
+    fdiag = dTh / dT * sympy.integrate(p['kh'] * p['et'] * phi(mi, z) * phi(mi, z), z)
+    fdiag += dTv / dT * (
+        sympy.integrate(p['kv'] * sympy.diff(phi(mi, z), z, 2) * phi(mi,z), z))
+    fdiag -= dTv / dT * (sympy.diff(p['kv'], z) * sympy.diff(phi(mi, z), z) * phi(mi, z))             
+        # note the negative for the diff (kv) is because the step function 
+        #at the top and bottom of the layer yields a dirac function that is 
+        #positive at ztop and negative at zbot. It works because definite 
+        #integral of f between ztop and zbot is F(ztop)- F(zbot). 
+        #i.e. I've created the indefininte integral such that when i sub 
+        #in ztop and zbot in the next step i get the correct contribution 
+        #for the step functions at ztop and zbot            
+    fdiag = fdiag.subs(z, mp['zbot']) - fdiag.subs(z, mp['ztop'])
+    fdiag = fdiag.subs(mp)
+    
+    foff = dTh / dT * sympy.integrate(p['kh'] * p['et'] * phi(mj, z) * phi(mi, z), z)
+    foff += dTv / dT * (
+        sympy.integrate(p['kv'] * sympy.diff(phi(mj, z), z, 2) * phi(mi,z), z))
+    foff -= dTv / dT * (sympy.diff(p['kv'], z) * sympy.diff(phi(mj, z), z) * phi(mi, z))
+                     
+    foff = foff.subs(z, mp['zbot']) - foff.subs(z, mp['ztop'])
+    foff = foff.subs(mp)
+    
+    text = """def make_psi(m, kvt, kvb, kht, khb, ett, etb, zt, zb, dTv, dTh, dT = 1.0):
+    import numpy.zeros
+    from math import sin, cos
+    
+    neig = len(m)
+    nlayers = len(zt)
+    
+    psi = numpy.zeros([neig, neig], float)        
+    for layer in range(nlayers):
+        for i in range(neig):
+            psi[i, i] += %s
+        for i in range(neig-1):
             for j in range(i + 1, neig):
-                psi[j, i] = psi[i, j]                
-        
-        return psi"""
+                psi[i, j] += %s                
+                
+    #psi is symmetric
+    for i in range(neig - 1):        
+        for j in range(i + 1, neig):
+            psi[j, i] = psi[i, j]                
+    #one day I'll know exacly why it's -1 * psi
+    return psi"""
     
         
     fn = text % (fdiag, foff)
@@ -167,12 +205,13 @@ def generate_psi_code():
     return fn
 
 
-#def runtest():
+
     
     
 if __name__ == '__main__':
-    print(generate_gam_code())    
-    #print(generate_psi_code())
+    print(generate_gam_code())
+    print '#'*65
+    print(generate_psi_code())
     pass
         
     
