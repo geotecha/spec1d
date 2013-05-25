@@ -40,7 +40,7 @@ def m_func(i, boundary=0):
          
     Returns
     -------
-    out : float
+    out : ``float``
         returns the `i` th eigenvalue
         
     """    
@@ -59,15 +59,15 @@ def make_gam(m, mvt, mvb, zt, zb):
         
     Parameters
     ----------
-    m : list of float
+    m : ``list`` of ``float``
         eigenvlaues of BVP. generate with spec1d.m_func
-    mvt : list of float
+    mvt : ``list`` of ``float``
         volume compressibility at top of each layer
-    mvb : list of float
+    mvb : ``list`` of ``float``
         volume compressibility at bottom of each layer        
-    zt : list of float
+    zt : ``list`` of ``float``
         normalised depth or z-coordinate at top of each layer. `zt[0]` = 0
-    zb : list of float
+    zb : ``list`` of ``float``
         normalised depth or z-coordinate at bottom of each layer. `zt[-1]` = 1
              
     Returns
@@ -119,29 +119,29 @@ def make_psi(m, kvt, kvb, kht, khb, ett, etb, zt, zb, dTv, dTh, dT = 1.0):
         
     Parameters
     ----------
-    m : list of ``float``
+    m : ``list`` of ``float``
         eigenvlaues of BVP. generate with spec1d.m_func
-    kvt : list of float
+    kvt : ``list`` of ``float``
         vertical permeability at top of each layer
-    kvb : list of float
+    kvb : ``list`` of ``float``
         vertical permeability at bottom of each layer        
-    kht : list of float
+    kht : ``list`` of ``float``
         horizontal permeability at top of each layer
-    khb : list of float
+    khb : ``list`` of ``float``
         horizontal permeability at bottom of each layer        
-    ett : list of float
+    ett : ``list`` of ``float``
         lumped vertical drain at top of each layer
-    etb : list of float
+    etb : ``list`` of ``float``
         lumped vertical drain at bottom of each layer        
-    zt : list of float
+    zt : ``list`` of ``float``
         normalised depth or z-coordinate at top of each layer. `zt[0]` = 0
-    zb : list of float
+    zb : ``list`` of ``float``
         normalised depth or z-coordinate at bottom of each layer. `zt[-1]` = 1
-    dTv : float
+    dTv : ``float``
         vertical time factor (calcled with total depth of profile)
-    dTh : float
+    dTh : ``float``
         horizontal time factor
-    dT : float, optional 
+    dT : ``float``, optional 
         time factor normalisational factor, gives better numerical 
         conditioning (default = 1.0)
              
@@ -157,7 +157,9 @@ def make_psi(m, kvt, kvb, kht, khb, ett, etb, zt, zb, dTv, dTh, dT = 1.0):
     Notes
     -----
     The :math:`\\mathbf{\\Psi}` matrix arises when integrating the depth 
-    dependant vertical permeability (:math:`m_v`), horizontal permeability (:math:`k_h`), lumped vertical drain parameter (:math:`\\eta`), against the spectral basis functions:
+    dependant vertical permeability (:math:`m_v`), horizontal permeability 
+    (:math:`k_h`), lumped vertical drain parameter (:math:`\\eta`), 
+    against the spectral basis functions:
     
     .. math:: \\mathbf{\\Psi}_{i,j}=\\frac{dT_h}{dT}\\int_{0}^1{\\frac{k_h}{\\overline{k}_h}\\frac{\\eta}{\\overline{\\eta}}\\phi_j\\phi_i\\,dZ}-\\frac{dT_v}{dT}\\int_{0}^1{\\frac{d}{dZ}\\left(\\frac{k_v}{\\overline{k}_v}\\frac{d\\phi_j}{dZ}\\right)\\phi_i\\,dZ}
     

@@ -107,7 +107,15 @@ def generate_gam_code():
     """Perform integrations and output a function that will generate gam (without docstring).
     
     Paste the resulting code (at least the loops) into make_gam.
-
+    
+    Notes
+    -----
+    The :math:`\\mathbf{\\Gamma}` matrix arises when integrating the depth 
+    dependant volume compressibility (:math:`m_v`) against the spectral basis 
+    functions:
+    
+    .. math:: \\mathbf{\\Gamma}_{i,j}=\\int_{0}^1{\\frac{m_v}{\\overline{m}_v}\\phi_i\\phi_j\\,dZ}
+    
     """
     mp, p = create_layer_sympy_var_and_maps(layer_prop=['z','mv'])
     
@@ -150,6 +158,82 @@ def generate_psi_code():
     """Perform integrations and output the function that will generate psi (without docstring).
 
     Paste the resulting code (at least the loops) into make_psi.
+    
+    Notes
+    -----    
+    The :math:`\\mathbf{\\Psi}` matrix arises when integrating the depth 
+    dependant vertical permeability (:math:`m_v`), horizontal permeability 
+    (:math:`k_h`), lumped vertical drain parameter (:math:`\\eta`), 
+    against the spectral basis functions:
+    
+    .. math:: \\mathbf{\\Psi}_{i,j}=\\frac{dT_h}{dT}\\int_{0}^1{\\frac{k_h}{\\overline{k}_h}\\frac{\\eta}{\\overline{\\eta}}\\phi_j\\phi_i\\,dZ}-\\frac{dT_v}{dT}\\int_{0}^1{\\frac{d}{dZ}\\left(\\frac{k_v}{\\overline{k}_v}\\frac{d\\phi_j}{dZ}\\right)\\phi_i\\,dZ}    
+    
+    
+
+
+    Integrating the horizontal drainage terms, :math:`dT_h`, is straightforward.  However, integrating the vertical drainage terms, :math:`dT_v`, requires some explanation.  The difficultly arises because the vertical permeability :math:`k_v` is defined using step functions at the top and bottom of each layer; those step functions when differentiated yield dirac-delta or impulse functions which must be handdled specially when integrating against the spectral basis functions.
+    
+    With sympy/sage I've found it easier to perform the indefinite integrals first finding the definite integral:
+    The integral of f between a and b is F(b)-F(a) where F is the anti-derivative of f
+    
+    ::
+        
+        y(x)
+        ^
+        |                                                                        
+        |                            yb                                            
+        |                          /|                                              
+        |                         / |                                              
+        |                        /  |                                              
+        |                       /   |                                           
+        |                      /    |                                              
+        |                   yt|     |                                              
+        |                     |     |                                              
+        0--------------------xt----xb------------------------1------>x
+        
+    Differentiate:
+    
+    ::
+        
+        y'(x)
+        ^
+        |                                                                        
+        |                     y(xt) * Dirac(x - xt)                                                   
+        |                     ^                                                   
+        |                     |                                                   
+        |                     |     |                                              
+        |                     |     |                                           
+        |               y'(xt)|-----|                                              
+        |                     |     |                                              
+        |                     |     v - y(xb) * Dirac(x - xb)                                                                                                
+        0--------------------xt----xb------------------------1------>x
+    
+    
+    Psi expression
+    
+    .. math:: \\mathbf{\\Psi}_{i,j}=\\frac{dT_h}{dT}\\int_{0}^1{\\frac{k_h}{\\overline{k}_h}\\frac{\\eta}{\\overline{\\eta}}\\phi_j\\phi_i\\,dZ}-\\frac{dT_v}{dT}\\int_{0}^1{\\frac{d}{dZ}\\left(\\frac{k_v}{\\overline{k}_v}\\frac{d\\phi_j}{dZ}\\right)\\phi_i\\,dZ}    
+    
+    expanding out the integral:
+        
+    .. math:: \\mathbf{\\Psi}_{i,j}=\\frac{dT_h}{dT}\\int_{0}^1{\\frac{k_h}{\\overline{k}_h}\\frac{\\eta}{\\overline{\\eta}}\\phi_j\\phi_i\\,dZ}-\\frac{dT_v}{dT}\\int_{0}^1{\\frac{k_v}{\\overline{k}_v}\\frac{d^2\\phi_j}{dZ^2}\\phi_i\\,dZ}-\\frac{dT_v}{dT}\\int_{0}^1{\\frac{d}{dZ}\\left(\\frac{k_v}{\\overline{k}_v}\\right)\\frac{d\\phi_j}{dZ}\\phi_i\\,dZ} 
+    
+    considering a single layer and separating the layer boundaries from the behaviour within a layer:
+        
+    .. math:: \\mathbf{\\Psi}_{i,j,layer}=\\frac{dT_h}{dT}\\int_{Z_t}^{Z_b}{\\frac{k_h}{\\overline{k}_h}\\frac{\\eta}{\\overline{\\eta}}\\phi_j\\phi_i\\,dZ}-\\frac{dT_v}{dT}\\int_{Z_t}^{Z_b}{\\frac{k_v}{\\overline{k}_v}\\frac{d^2\\phi_j}{dZ^2}\\phi_i\\,dZ}-\\frac{dT_v}{dT}\\int_{Z_t}^{Z_b}{\\frac{d}{dZ}\\left(\\frac{k_v}{\\overline{k}_v}\\right)\\frac{d\\phi_j}{dZ}\\phi_i\\,dZ}-\\frac{dT_v}{dT}\\int_{0}^{1}{\\frac{k_v}{\\overline{k}_v}\\delta\\left(Z-Z_t\\right)\\frac{d\\phi_j}{dZ}\\phi_i\\,dZ}+\\frac{dT_v}{dT}\\int_{0}^{1}{\\frac{k_v}{\\overline{k}_v}\\delta\\left(Z-Z_b\\right)\\frac{d\\phi_j}{dZ}\\phi_i\\,dZ}
+    
+    performing the dirac delta integrations:
+        
+    .. math:: \\mathbf{\\Psi}_{i,j,layer}=\\frac{dT_h}{dT}\\int_{Z_t}^{Z_b}{\\frac{k_h}{\\overline{k}_h}\\frac{\\eta}{\\overline{\\eta}}\\phi_j\\phi_i\\,dZ}-\\frac{dT_v}{dT}\\int_{Z_t}^{Z_b}{\\frac{k_v}{\\overline{k}_v}\\frac{d^2\\phi_j}{dZ^2}\\phi_i\\,dZ}-\\frac{dT_v}{dT}\\int_{Z_t}^{Z_b}{\\frac{d}{dZ}\\left(\\frac{k_v}{\\overline{k}_v}\\right)\\frac{d\\phi_j}{dZ}\\phi_i\\,dZ}-\\frac{dT_v}{dT}\\left.\\frac{k_v}{\\overline{k}_v}\\frac{d\\phi_j}{dZ}\\phi_i\\right|_{Z=Z_t}+\\frac{dT_v}{dT}\\left.\\frac{k_v}{\\overline{k}_v}\\frac{d\\phi_j}{dZ}\\phi_i\\right|_{Z=Z_b}
+    
+    now to get it in the form of F(zb)-F(zt) we only take the zb part of the dirac integration:
+        
+    .. math:: F\\left(z\\right)=\\frac{dT_h}{dT}\\int{\\frac{k_h}{\\overline{k}_h}\\frac{\\eta}{\\overline{\\eta}}\\phi_j\\phi_i\\,dZ}-\\frac{dT_v}{dT}\\int{\\frac{k_v}{\\overline{k}_v}\\frac{d^2\\phi_j}{dZ^2}\\phi_i\\,dZ}-\\frac{dT_v}{dT}\\int{\\frac{d}{dZ}\\left(\\frac{k_v}{\\overline{k}_v}\\right)\\frac{d\\phi_j}{dZ}\\phi_i\\,dZ}+\\frac{dT_v}{dT}\\left.\\frac{k_v}{\\overline{k}_v}\\frac{d\\phi_j}{dZ}\\phi_i\\right|_{Z=Z}
+    
+    Now we get:
+        
+    .. math:: \\mathbf{\\Psi}_{i,j,layer}=F\\left(Z_b\\right)-F\\left(Z_t\\right)
+    
+    
     """
     sympy.var('dTv, dTh, dT')    
     mp, p = create_layer_sympy_var_and_maps(layer_prop=['z','kv','kh','et'])
@@ -237,12 +321,4 @@ if __name__ == '__main__':
 # print h_name
 # print c_header
 #==============================================================================
-
-
-
-
-
-
-
-
 
