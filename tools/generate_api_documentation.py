@@ -89,7 +89,7 @@ def main():
     c.stdin.write('\n')#pngmath: include math, rendered as PNG images (y/N) [n]:
     c.stdin.write('y\n')#mathjax: include math, rendered in the browser by MathJax (y/N) [n]:
     c.stdin.write('\n')#ifconfig: conditional inclusion of content based on config values (y/N) [n]:
-    c.stdin.write('y\n')#viewcode: include links to the source code of documented Python objects (y/N) [n]:
+    c.stdin.write('\n')#viewcode: include links to the source code of documented Python objects (y/N) [n]:
     c.stdin.write('y\n')#Create Makefile? (Y/n) [y]:     
     c.stdin.write('y\n')#Create Windows command file? (Y/n) [y]:
     c.communicate()  #wiat untill subprocess finsihes

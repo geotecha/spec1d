@@ -43,7 +43,7 @@ def string_to_IndexedBase(s):
     return sympy.tensor.IndexedBase(s)
         
 def create_layer_sympy_var_and_maps(layer_prop=['z','kv','kh','et', 'mv',
-                                                'surz','vacz']):
+                                                'surz', 'vacz']):
     """Create sympy variables and maps for use with integrating \
     to generate 1d spectral equations.
     
@@ -58,26 +58,25 @@ def create_layer_sympy_var_and_maps(layer_prop=['z','kv','kh','et', 'mv',
             
     Parameters
     ----------
-    layer_prop : list of str, optional
+    layer_prop : ``list`` of ``str``, optional
         label for properties that vary in a layer
+        (default is ['z','kv','kh','et', 'mv', 'surz',' vacz'])
     
          
     Returns
     -------
-    prop_map : dict
+    prop_map : ``dict``
         maps the string version of a variable to the sympy.tensor.IndexedBase 
         version e.g. prop_map['kvtop'] = kvt[layer]
-    linear_expressions: dict
+    linear_expressions : ``dict``
         maps the string version of a variable to an expression describing how 
         that varibale varies linearly within a layer    
         
     Examples
     --------
-    >>> prop_map, linear_expressions = create_layer_sympy_var_and_maps(layer_prop=['
-z','kv'])
+    >>> prop_map, linear_expressions = create_layer_sympy_var_and_maps(layer_prop=['z','kv'])
     >>> prop_map
-    {'kvtop': kvt[layer], 'mi': m[i], 'mj': m[j], 'zbot': zb[layer], 'ztop': zt[laye
-    r], 'kvbot': kvb[layer]}
+    {'kvtop': kvt[layer], 'mi': m[i], 'mj': m[j], 'zbot': zb[layer], 'ztop': zt[layer], 'kvbot': kvb[layer]}
     >>> linear_expressions
     {'z': z, 'kv': kvtop + (kvbot - kvtop)*(z - ztop)/(zbot - ztop)}
 
@@ -121,7 +120,7 @@ def generate_gam_code():
     foff = foff.subs(mp)
     
     text = """def make_gam(m, mvt, mvb, zt, zb):
-    import numpy.zeros
+    import numpy
     from math import sin, cos
     
     neig = len(m)
@@ -156,10 +155,12 @@ def generate_psi_code():
     mp, p = create_layer_sympy_var_and_maps(layer_prop=['z','kv','kh','et'])
         
     fdiag = dTh / dT * sympy.integrate(p['kh'] * p['et'] * phi(mi, z) * phi(mi, z), z)
-    fdiag += dTv / dT * (
+    fdiag -= dTv / dT * (
         sympy.integrate(p['kv'] * sympy.diff(phi(mi, z), z, 2) * phi(mi,z), z))
-    fdiag -= dTv / dT * (sympy.diff(p['kv'], z) * sympy.diff(phi(mi, z), z) * phi(mi, z))             
-        # note the negative for the diff (kv) is because the step function 
+    fdiag -= dTv / dT * (
+        sympy.integrate(sympy.diff(p['kv'], z) * sympy.diff(phi(mi, z), z) * phi(mi, z),z))
+    fdiag += dTv / dT * (p['kv'] * sympy.diff(phi(mi, z), z) * phi(mi, z))         
+        # note the 'negative' for the dTv*diff (kv) part is because the step fn 
         #at the top and bottom of the layer yields a dirac function that is 
         #positive at ztop and negative at zbot. It works because definite 
         #integral of f between ztop and zbot is F(ztop)- F(zbot). 
@@ -170,15 +171,16 @@ def generate_psi_code():
     fdiag = fdiag.subs(mp)
     
     foff = dTh / dT * sympy.integrate(p['kh'] * p['et'] * phi(mj, z) * phi(mi, z), z)
-    foff += dTv / dT * (
+    foff -= dTv / dT * (
         sympy.integrate(p['kv'] * sympy.diff(phi(mj, z), z, 2) * phi(mi,z), z))
-    foff -= dTv / dT * (sympy.diff(p['kv'], z) * sympy.diff(phi(mj, z), z) * phi(mi, z))
-                     
+    foff -= dTv / dT * (
+        sympy.integrate(sympy.diff(p['kv'], z) * sympy.diff(phi(mj, z), z) * phi(mi, z),z))
+    foff += dTv / dT * (p['kv'] * sympy.diff(phi(mj, z), z) * phi(mi, z))                 
     foff = foff.subs(z, mp['zbot']) - foff.subs(z, mp['ztop'])
     foff = foff.subs(mp)
     
     text = """def make_psi(m, kvt, kvb, kht, khb, ett, etb, zt, zb, dTv, dTh, dT = 1.0):
-    import numpy.zeros
+    import numpy
     from math import sin, cos
     
     neig = len(m)
@@ -196,7 +198,7 @@ def generate_psi_code():
     for i in range(neig - 1):        
         for j in range(i + 1, neig):
             psi[j, i] = psi[i, j]                
-    #one day I'll know exacly why it's -1 * psi
+    
     return psi"""
     
         
@@ -209,7 +211,7 @@ def generate_psi_code():
     
     
 if __name__ == '__main__':
-    print(generate_gam_code())
+    #print(generate_gam_code())
     print '#'*65
     print(generate_psi_code())
     pass
