@@ -27,7 +27,7 @@ import numpy as np
 from math import pi
 
 
-from spec1d.spec1d import m_func, make_gam, make_psi, make_thesig
+from spec1d.spec1d import m_func, make_gamma, make_psi, make_theta_two_prop
 
 ### start Method 1: global vars 
 ###     (not recommended as it uses global variables)
@@ -140,44 +140,44 @@ def test_m_func_bad_boundary():
 
 
 
-class test_make_gam(object):
-    """A suite of tests for the make_gam function        
+class test_make_gamma(object):
+    """A suite of tests for the make_gamma function        
     """
     
     def __init__(self):        
         self.PTPB = m_func(np.arange(2),0)
         self.PTIB = m_func(np.arange(2),1)
-        self.gam_isotropic = np.array([[0.5, 0], [0, 0.5]])
+        self.gamma_isotropic = np.array([[0.5, 0], [0, 0.5]])
         
         self.cases = [            
             
             ['mv const, PTIB', 
              {'m': self.PTIB, 'zt': [0], 'zb': [1], 'mvt': [1], 'mvb': [1]}, 
-             self.gam_isotropic],
+             self.gamma_isotropic],
             ['mv const, PTPB', 
              {'m': self.PTPB, 'zt': [0], 'zb': [1], 'mvt': [1], 'mvb': [1]},
-             self.gam_isotropic],
+             self.gamma_isotropic],
             
             ['mv const *2, PTIB', 
              {'m': self.PTIB, 'zt': [0], 'zb': [1], 'mvt': [2], 'mvb': [2]}, 
-             self.gam_isotropic * 2],
+             self.gamma_isotropic * 2],
             ['mv const *2, PTPB', 
              {'m': self.PTPB, 'zt': [0], 'zb': [1], 'mvt': [2], 'mvb': [2]},
-             self.gam_isotropic * 2],
+             self.gamma_isotropic * 2],
              
             ['mv const, 2 layers, PTIB', 
              {'m': self.PTIB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'mvt': [1, 1], 'mvb': [1, 1]}, 
-             self.gam_isotropic],
+             self.gamma_isotropic],
             ['mv const, 2 layers, PTPB', 
              {'m': self.PTPB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'mvt': [1, 1], 'mvb': [1, 1]},
-             self.gam_isotropic], 
+             self.gamma_isotropic], 
             
             ['mv const*2, 2 layers, PTIB', 
              {'m': self.PTIB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'mvt': [2, 2], 'mvb': [2, 2]}, 
-             self.gam_isotropic * 2],
+             self.gamma_isotropic * 2],
             ['mv const*2, 2 layers, PTPB', 
              {'m': self.PTPB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'mvt': [2, 2], 'mvb': [2, 2]},
-             self.gam_isotropic * 2],
+             self.gamma_isotropic * 2],
             #mv 2 layers, const within each layer 
             ['mv 2 layers, const within each layer, PTIB', 
              {'m': self.PTIB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'mvt': [1, 0.5], 'mvb': [1, 0.5]}, 
@@ -201,17 +201,17 @@ class test_make_gam(object):
         
     ### a generator example
     def test_cases(self):   
-        """loop through and test make_gam cases with numpy.allclose"""
+        """loop through and test make_gamma cases with numpy.allclose"""
         for desc, fixture, result in self.cases:            
-            gam = make_gam(**fixture)
-            check = np.allclose(gam, result)
+            gamma = make_gamma(**fixture)
+            check = np.allclose(gamma, result)
             msg = """\
-failed test_make_gam, case: %s
+failed test_make_gamma, case: %s
 %s
-gam:
+gamma:
 %s
 expected:
-%s""" % (desc, fixture, gam, result)
+%s""" % (desc, fixture, gamma, result)
             yield ok_, check, msg
             
             
@@ -498,41 +498,41 @@ expected:
             yield ok_, check, msg 
             
             
-class test_make_gamv2(base_t_ester):
-    """same as test_make_gam but uses the basic tester class"""
+class test_make_gammav2(base_t_ester):
+    """same as test_make_gamma but uses the basic tester class"""
     def __init__(self):
-        base_t_ester.__init__(self, make_gam, prefix = self.__class__.__name__)        
-        self.gam_isotropic = np.array([[0.5, 0], [0, 0.5]])
+        base_t_ester.__init__(self, make_gamma, prefix = self.__class__.__name__)        
+        self.gamma_isotropic = np.array([[0.5, 0], [0, 0.5]])
         
         self.cases = [            
             
             ['mv const, PTIB', 
              {'m': self.PTIB, 'zt': [0], 'zb': [1], 'mvt': [1], 'mvb': [1]}, 
-             self.gam_isotropic],
+             self.gamma_isotropic],
             ['mv const, PTPB', 
              {'m': self.PTPB, 'zt': [0], 'zb': [1], 'mvt': [1], 'mvb': [1]},
-             self.gam_isotropic],
+             self.gamma_isotropic],
             
             ['mv const *2, PTIB', 
              {'m': self.PTIB, 'zt': [0], 'zb': [1], 'mvt': [2], 'mvb': [2]}, 
-             self.gam_isotropic * 2],
+             self.gamma_isotropic * 2],
             ['mv const *2, PTPB', 
              {'m': self.PTPB, 'zt': [0], 'zb': [1], 'mvt': [2], 'mvb': [2]},
-             self.gam_isotropic * 2],
+             self.gamma_isotropic * 2],
              
             ['mv const, 2 layers, PTIB', 
              {'m': self.PTIB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'mvt': [1, 1], 'mvb': [1, 1]}, 
-             self.gam_isotropic],
+             self.gamma_isotropic],
             ['mv const, 2 layers, PTPB', 
              {'m': self.PTPB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'mvt': [1, 1], 'mvb': [1, 1]},
-             self.gam_isotropic], 
+             self.gamma_isotropic], 
             
             ['mv const*2, 2 layers, PTIB', 
              {'m': self.PTIB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'mvt': [2, 2], 'mvb': [2, 2]}, 
-             self.gam_isotropic * 2],
+             self.gamma_isotropic * 2],
             ['mv const*2, 2 layers, PTPB', 
              {'m': self.PTPB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'mvt': [2, 2], 'mvb': [2, 2]},
-             self.gam_isotropic * 2],
+             self.gamma_isotropic * 2],
             
             ['mv 2 layers, const within each layer, PTIB', 
              {'m': self.PTIB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'mvt': [1, 0.5], 'mvb': [1, 0.5]}, 
@@ -552,11 +552,10 @@ class test_make_gamv2(base_t_ester):
             ]
             
             
-class test_make_thesig(base_t_ester):
+class test_make_theta_two_prop(base_t_ester):
     """A suite of tests for the make_thesig function"""
     def __init__(self):
-        base_t_ester.__init__(self, make_thesig, prefix = self.__class__.__name__)        
-        self.gam_isotropic = np.array([[0.5, 0], [0, 0.5]])
+        base_t_ester.__init__(self, make_theta_two_prop, prefix = self.__class__.__name__)                
         
         self.iso_PTIB = np.array([2/pi, 2/(3*pi)])
         self.iso_PTPB = np.array([2/pi, 0.0])
@@ -564,67 +563,67 @@ class test_make_thesig(base_t_ester):
         
         self.cases = [            
             
-            ['mv const, sur const PTIB', 
-             {'m': self.PTIB, 'zt': [0], 'zb': [1], 'mvt': [1], 'mvb': [1], 'surzt': [1], 'surzb': [1]}, 
+            ['a const, b const PTIB', 
+             {'m': self.PTIB, 'zt': [0], 'zb': [1], 'at': [1], 'ab': [1], 'bt': [1], 'bb': [1]}, 
              self.iso_PTIB],
-            ['mv const, sur const PTPB', 
-             {'m': self.PTPB, 'zt': [0], 'zb': [1], 'mvt': [1], 'mvb': [1], 'surzt': [1], 'surzb': [1]},
+            ['a const, b const PTPB', 
+             {'m': self.PTPB, 'zt': [0], 'zb': [1], 'at': [1], 'ab': [1], 'bt': [1], 'bb': [1]},
              self.iso_PTPB],
             
-            ['mv const*2,sur const PTIB', 
-             {'m': self.PTIB, 'zt': [0], 'zb': [1], 'mvt': [2], 'mvb': [2], 'surzt': [1], 'surzb': [1]}, 
+            ['a const*2,b const PTIB', 
+             {'m': self.PTIB, 'zt': [0], 'zb': [1], 'at': [2], 'ab': [2], 'bt': [1], 'bb': [1]}, 
              self.iso_PTIB * 2],
-            ['mv const*2, sur const PTPB', 
-             {'m': self.PTPB, 'zt': [0], 'zb': [1], 'mvt': [2], 'mvb': [2], 'surzt': [1], 'surzb': [1]},
+            ['a const*2, b const PTPB', 
+             {'m': self.PTPB, 'zt': [0], 'zb': [1], 'at': [2], 'ab': [2], 'bt': [1], 'bb': [1]},
              self.iso_PTPB * 2],
             
-            ['mv const, sur const*2 PTIB', 
-             {'m': self.PTIB, 'zt': [0], 'zb': [1], 'mvt': [1], 'mvb': [1], 'surzt': [2], 'surzb': [2]}, 
+            ['a const, b const*2 PTIB', 
+             {'m': self.PTIB, 'zt': [0], 'zb': [1], 'at': [1], 'ab': [1], 'bt': [2], 'bb': [2]}, 
              self.iso_PTIB * 2],
-            ['mv const, sur const*2 PTPB', 
-             {'m': self.PTPB, 'zt': [0], 'zb': [1], 'mvt': [1], 'mvb': [1], 'surzt': [2], 'surzb': [2]},
+            ['a const, b const*2 PTPB', 
+             {'m': self.PTPB, 'zt': [0], 'zb': [1], 'at': [1], 'ab': [1], 'bt': [2], 'bb': [2]},
              self.iso_PTPB * 2],
             
-            ['mv const*0.5, sur const*2 PTIB', 
-             {'m': self.PTIB, 'zt': [0], 'zb': [1], 'mvt': [0.5], 'mvb': [0.5], 'surzt': [2], 'surzb': [2]}, 
+            ['a const*0.5, b const*2 PTIB', 
+             {'m': self.PTIB, 'zt': [0], 'zb': [1], 'at': [0.5], 'ab': [0.5], 'bt': [2], 'bb': [2]}, 
              self.iso_PTIB],
-            ['mv const*0.5, sur const*2 PTPB', 
-             {'m': self.PTPB, 'zt': [0], 'zb': [1], 'mvt': [0.5], 'mvb': [0.5], 'surzt': [2], 'surzb': [2]},
+            ['a const*0.5, b const*2 PTPB', 
+             {'m': self.PTPB, 'zt': [0], 'zb': [1], 'at': [0.5], 'ab': [0.5], 'bt': [2], 'bb': [2]},
              self.iso_PTPB],
             
-            ['mv const within 2 layers, sur const PTIB', 
-             {'m': self.PTIB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'mvt': [1, 2], 'mvb': [1, 2], 'surzt': [1, 1], 'surzb': [1, 1]}, 
+            ['a const within 2 layers, b const PTIB', 
+             {'m': self.PTIB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'at': [1, 2], 'ab': [1, 2], 'bt': [1, 1], 'bb': [1, 1]}, 
              np.array([1.15166, 0.146631])],
-            ['mv const within 2 layers, sur const PTPB', 
-             {'m': self.PTPB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'mvt': [1, 2], 'mvb': [1, 2], 'surzt': [1, 1], 'surzb': [1, 1]}, 
+            ['a const within 2 layers, b const PTPB', 
+             {'m': self.PTPB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'at': [1, 2], 'ab': [1, 2], 'bt': [1, 1], 'bb': [1, 1]}, 
              np.array([1.05329, -0.287914])],
              
-            ['mv const, sur const within 2 layers PTIB', 
-             {'m': self.PTIB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'mvt': [1, 2], 'mvb': [1, 2], 'surzt': [1, 1], 'surzb': [1, 1]}, 
+            ['a const, b const within 2 layers PTIB', 
+             {'m': self.PTIB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'at': [1, 2], 'ab': [1, 2], 'bt': [1, 1], 'bb': [1, 1]}, 
              np.array([1.15166, 0.146631])],
-            ['mv const, sur const within 2 layers PTPB', 
-             {'m': self.PTPB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'mvt': [1, 1], 'mvb': [1, 1], 'surzt': [1, 2], 'surzb': [1, 2]}, 
+            ['a const, b const within 2 layers PTPB', 
+             {'m': self.PTPB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'at': [1, 1], 'ab': [1, 1], 'bt': [1, 2], 'bb': [1, 2]}, 
              np.array([1.05329, -0.287914])], 
              
-            ['mv linear within one layer, sur const PTIB', 
-             {'m': self.PTIB, 'zt': [0], 'zb': [1], 'mvt': [1], 'mvb': [2], 'surzt': [1], 'surzb': [1]}, 
+            ['a linear within one layer, b const PTIB', 
+             {'m': self.PTIB, 'zt': [0], 'zb': [1], 'at': [1], 'ab': [2], 'bt': [1], 'bb': [1]}, 
              np.array([(2*(2+pi))/pi**2, (2*(3*pi-2))/(9*pi**2)])],
-            ['mv linear within one layer, sur const PTPB', 
-             {'m': self.PTPB, 'zt': [0], 'zb': [1], 'mvt': [1], 'mvb': [2], 'surzt': [1], 'surzb': [1]},
+            ['a linear within one layer, b const PTPB', 
+             {'m': self.PTPB, 'zt': [0], 'zb': [1], 'at': [1], 'ab': [2], 'bt': [1], 'bb': [1]},
              np.array([3/pi, -1/(2*pi)])], 
              
-            ['mv const, sur linear within one layer PTIB', 
-             {'m': self.PTIB, 'zt': [0], 'zb': [1], 'mvt': [1], 'mvb': [1], 'surzt': [1], 'surzb': [2]}, 
+            ['a const, b linear within one layer PTIB', 
+             {'m': self.PTIB, 'zt': [0], 'zb': [1], 'at': [1], 'ab': [1], 'bt': [1], 'bb': [2]}, 
              np.array([(2*(2+pi))/pi**2, (2*(3*pi-2))/(9*pi**2)])],
-            ['mv const, sur linear within one layer PTPB', 
-             {'m': self.PTPB, 'zt': [0], 'zb': [1], 'mvt': [1], 'mvb': [1], 'surzt': [1], 'surzb': [2]},
+            ['a const, b linear within one layer PTPB', 
+             {'m': self.PTPB, 'zt': [0], 'zb': [1], 'at': [1], 'ab': [1], 'bt': [1], 'bb': [2]},
              np.array([3/pi, -1/(2*pi)])],  
              
-            ['mv and sur linear witin one layer PTIB', 
-             {'m': self.PTIB, 'zt': [0], 'zb': [1], 'mvt': [1], 'mvb': [2], 'surzt': [1], 'surzb': [2]}, 
+            ['a and b linear witin one layer PTIB', 
+             {'m': self.PTIB, 'zt': [0], 'zb': [1], 'at': [1], 'ab': [2], 'bt': [1], 'bb': [2]}, 
              np.array([(2*(-8+8*pi+pi**2))/pi**3, (2*(-8-24*pi+9*pi**2))/(27*pi**3)])],
-            ['mv and sur linear witin one layer PTPB', 
-             {'m': self.PTPB, 'zt': [0], 'zb': [1], 'mvt': [1], 'mvb': [2], 'surzt': [1], 'surzb': [2]},
+            ['a and b linear witin one layer PTPB', 
+             {'m': self.PTPB, 'zt': [0], 'zb': [1], 'at': [1], 'ab': [2], 'bt': [1], 'bb': [2]},
              np.array([(5*pi**2-4)/pi**3, -3/(2*pi)])],                                     
             ]
                         

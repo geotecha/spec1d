@@ -28,7 +28,7 @@ def linear(x, x1, y1, x2, y2):
     return (y2 - y1)/(x2 - x1) * (x-x1) + y1
     
 def phi(m,z):
-    """phi function
+    """one dimensional spectral basis function
 
     """
     
@@ -102,10 +102,10 @@ def create_layer_sympy_var_and_maps(layer_prop=['z','kv','kh','et', 'mv',
         linear_expressions[prop]=linear(z, ztop, eval(prop+suffix['t']), zbot, eval(prop+suffix['b']))
     return (prop_map, linear_expressions)
     
-def generate_gam_code():
-    """Perform integrations and output a function that will generate gam (without docstring).
+def generate_gamma_code():
+    """Perform integrations and output a function that will generate gamma (without docstring).
     
-    Paste the resulting code (at least the loops) into make_gam.
+    Paste the resulting code (at least the loops) into make_gamma.
     
     Notes
     -----
@@ -126,27 +126,27 @@ def generate_gam_code():
     foff = foff.subs(z, mp['zbot']) - foff.subs(z, mp['ztop'])
     foff = foff.subs(mp)
     
-    text = """def make_gam(m, mvt, mvb, zt, zb):
+    text = """def make_gamma(m, mvt, mvb, zt, zb):
     import numpy
     from math import sin, cos
     
     neig = len(m)
     nlayers = len(zt)
     
-    gam = numpy.zeros([neig, neig], float)        
+    gamma = numpy.zeros([neig, neig], float)        
     for layer in range(nlayers):
         for i in range(neig):
-            gam[i, i] += %s
+            gamma[i, i] += %s
         for i in range(neig-1):
             for j in range(i + 1, neig):
-                gam[i, j] += %s                
+                gamma[i, j] += %s                
                 
-    #gam is symmetric
+    #gamma is symmetric
     for i in range(neig - 1):        
         for j in range(i + 1, neig):
-            gam[j, i] = gam[i, j]                
+            gamma[j, i] = gamma[i, j]                
     
-    return gam"""
+    return gamma"""
     
         
     fn = text % (fdiag, foff)
@@ -216,8 +216,9 @@ def generate_psi_code():
     The general expression for :math:`\\mathbf{\\Psi}` is:
     
     .. math:: \\mathbf{\\Psi}_{i,j}=\\frac{dT_h}{dT}\\int_{0}^1{\\frac{k_h}{\\overline{k}_h}\\frac{\\eta}{\\overline{\\eta}}\\phi_j\\phi_i\\,dZ}-\\frac{dT_v}{dT}\\int_{0}^1{\\frac{d}{dZ}\\left(\\frac{k_v}{\\overline{k}_v}\\frac{d\\phi_j}{dZ}\\right)\\phi_i\\,dZ}    
-    
-    Expanding out the integral yields:
+        :label: psi
+        
+    Expanding out the integrals in :eq:`psi`. yields:
         
     .. math:: \\mathbf{\\Psi}_{i,j}=\\frac{dT_h}{dT}\\int_{0}^1{\\frac{k_h}{\\overline{k}_h}\\frac{\\eta}{\\overline{\\eta}}\\phi_j\\phi_i\\,dZ}-\\frac{dT_v}{dT}\\int_{0}^1{\\frac{k_v}{\\overline{k}_v}\\frac{d^2\\phi_j}{dZ^2}\\phi_i\\,dZ}-\\frac{dT_v}{dT}\\int_{0}^1{\\frac{d}{dZ}\\left(\\frac{k_v}{\\overline{k}_v}\\right)\\frac{d\\phi_j}{dZ}\\phi_i\\,dZ} 
     
@@ -295,51 +296,63 @@ def generate_psi_code():
     return fn
 
 
-def generate_thesig_code():
-    """Perform integrations and output a function that will generate thesig (without docstring).
+def generate_theta_two_prop():
+    """Perform integrations and output a function that will generate theta_two_prop (without docstring).
     
-    Paste the resulting code (at least the loops) into make_thesig.
+    Paste the resulting code (at least the loops) into make_theta_two_prop.
     
     Notes
     -----
-    The :math:`\\mathbf{\\theta}_\\sigma` matrix arises when integrating the 
-    depth dependant volume compressibility (:math:`m_v`) and surcharge 
-    :math:`\\sigma` against the spectral basisfunctions:
+    theta_two_prop is used when integrating two linear properties against the basis fuction.
+    
+    .. math:: \\mathbf{\\theta}_{two prop, i}=\\int_{0}^1{a\\left(Z\\right)b\\left(Z\\right)\\phi_i\\,dZ}    
+    
+    Specifically it is used in calculating :math:`\\mathbf{\\theta}_\\sigma` 
+    which arises when integrating the depth dependant volume compressibility 
+    (:math:`m_v`) and surcharge :math:`\\sigma` against the spectral basis 
+    functions:
     
     .. math:: \\mathbf{\\theta}_{\\sigma,i}=\\int_{0}^1{\\frac{m_v}{\\overline{m}_v}\\sigma\\left(Z\\right)\\phi_i\\,dZ}
     
+    It is also used in calculating :math:`\\mathbf{\\theta}_w` 
+    which arises when integrating the depth dependant vertical drain parameter  
+    (:math:`\\eta`) and vacuum :math:`w` against the spectral basis 
+    function:
+        
+    .. math:: \\mathbf{\\theta}_{w,i}=dTh\\int_{0}^1{\\frac{\\eta}{\\overline{\\eta}}w\\left(Z\\right)\\phi_i\\,dZ}
+        
     """
-    mp, p = create_layer_sympy_var_and_maps(layer_prop=['z', 'mv', 'surz'])
+    mp, p = create_layer_sympy_var_and_maps(layer_prop=['z', 'a', 'b'])
     
     
     
-    fcol = sympy.integrate(p['mv'] * p['surz'] * phi(mi, z), z)        
+    fcol = sympy.integrate(p['a'] * p['b'] * phi(mi, z), z)        
     fcol = fcol.subs(z, mp['zbot']) - fcol.subs(z, mp['ztop'])
     fcol = fcol.subs(mp)
     
-    text = """def make_thesig(m, mvt, mvb, surzt, surzb, zt, zb):
+    text = """def make_theta_two_prop(m, at, ab, bt, bb, zt, zb):
     import numpy
     from math import sin, cos
     
     neig = len(m)
     nlayers = len(zt)
     
-    thesig = numpy.zeros(neig, float)        
+    theta_two_prop = numpy.zeros(neig, float)        
     for layer in range(nlayers):
         for i in range(neig):
-            thesig[i] += %s
+            theta_two_prop[i] += %s
     
-    return thesig"""
+    return theta_two_prop"""
     
         
     fn = text % fcol
     return fn
     
 if __name__ == '__main__':
-    #print(generate_gam_code())
+    #print(generate_gamma_code())
     print '#'*65
     #print(generate_psi_code())
-    print(generate_thesig_code())
+    print(generate_theta_two_prop())
     pass
         
     
