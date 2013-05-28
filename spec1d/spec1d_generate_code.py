@@ -15,8 +15,7 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
 #==============================================================================
-"""use sympy to generate code for generating spectral method matrix 
-subroutines"""
+"""use sympy to generate code for generating spectral method matrix subroutines"""
 
 from __future__ import division
 
@@ -168,13 +167,14 @@ def generate_psi_code():
     
     .. math:: \\mathbf{\\Psi}_{i,j}=\\frac{dT_h}{dT}\\int_{0}^1{\\frac{k_h}{\\overline{k}_h}\\frac{\\eta}{\\overline{\\eta}}\\phi_j\\phi_i\\,dZ}-\\frac{dT_v}{dT}\\int_{0}^1{\\frac{d}{dZ}\\left(\\frac{k_v}{\\overline{k}_v}\\frac{d\\phi_j}{dZ}\\right)\\phi_i\\,dZ}    
     
-    
-
-
-    Integrating the horizontal drainage terms, :math:`dT_h`, is straightforward.  However, integrating the vertical drainage terms, :math:`dT_v`, requires some explanation.  The difficultly arises because the vertical permeability :math:`k_v` is defined using step functions at the top and bottom of each layer; those step functions when differentiated yield dirac-delta or impulse functions which must be handdled specially when integrating against the spectral basis functions.
-    
-    With sympy/sage I've found it easier to perform the indefinite integrals first finding the definite integral:
-    The integral of f between a and b is F(b)-F(a) where F is the anti-derivative of f
+    Integrating the horizontal drainage terms, :math:`dT_h`, is 
+    straightforward.  However, integrating the vertical drainage terms, 
+    :math:`dT_v`, requires some explanation.  The difficultly arises because 
+    the vertical permeability :math:`k_v` is defined using step functions at 
+    the top and bottom of each layer; those step functions when differentiated 
+    yield dirac-delta or impulse functions which must be handled specially 
+    when integrating against the spectral basis functions.  The graph below
+    shows what happens when the :math:`k_v` distribution is differentiated.    
     
     ::
         
@@ -208,28 +208,32 @@ def generate_psi_code():
         |                     |     v - y(xb) * Dirac(x - xb)                                                                                                
         0--------------------xt----xb------------------------1------>x
     
+    With sympy/sage I've found it easier to perform the indefinite integrals 
+    first  and then sub in the bounds of integration. That is, the integral 
+    of f between a and b is F(b)-F(a) where F is the anti-derivative of f.
     
-    Psi expression
+    
+    The general expression for :math:`\\mathbf{\\Psi}` is:
     
     .. math:: \\mathbf{\\Psi}_{i,j}=\\frac{dT_h}{dT}\\int_{0}^1{\\frac{k_h}{\\overline{k}_h}\\frac{\\eta}{\\overline{\\eta}}\\phi_j\\phi_i\\,dZ}-\\frac{dT_v}{dT}\\int_{0}^1{\\frac{d}{dZ}\\left(\\frac{k_v}{\\overline{k}_v}\\frac{d\\phi_j}{dZ}\\right)\\phi_i\\,dZ}    
     
-    expanding out the integral:
+    Expanding out the integral yields:
         
     .. math:: \\mathbf{\\Psi}_{i,j}=\\frac{dT_h}{dT}\\int_{0}^1{\\frac{k_h}{\\overline{k}_h}\\frac{\\eta}{\\overline{\\eta}}\\phi_j\\phi_i\\,dZ}-\\frac{dT_v}{dT}\\int_{0}^1{\\frac{k_v}{\\overline{k}_v}\\frac{d^2\\phi_j}{dZ^2}\\phi_i\\,dZ}-\\frac{dT_v}{dT}\\int_{0}^1{\\frac{d}{dZ}\\left(\\frac{k_v}{\\overline{k}_v}\\right)\\frac{d\\phi_j}{dZ}\\phi_i\\,dZ} 
     
-    considering a single layer and separating the layer boundaries from the behaviour within a layer:
+    Considering a single layer and separating the layer boundaries from the behaviour within a layer gives:
         
     .. math:: \\mathbf{\\Psi}_{i,j,layer}=\\frac{dT_h}{dT}\\int_{Z_t}^{Z_b}{\\frac{k_h}{\\overline{k}_h}\\frac{\\eta}{\\overline{\\eta}}\\phi_j\\phi_i\\,dZ}-\\frac{dT_v}{dT}\\int_{Z_t}^{Z_b}{\\frac{k_v}{\\overline{k}_v}\\frac{d^2\\phi_j}{dZ^2}\\phi_i\\,dZ}-\\frac{dT_v}{dT}\\int_{Z_t}^{Z_b}{\\frac{d}{dZ}\\left(\\frac{k_v}{\\overline{k}_v}\\right)\\frac{d\\phi_j}{dZ}\\phi_i\\,dZ}-\\frac{dT_v}{dT}\\int_{0}^{1}{\\frac{k_v}{\\overline{k}_v}\\delta\\left(Z-Z_t\\right)\\frac{d\\phi_j}{dZ}\\phi_i\\,dZ}+\\frac{dT_v}{dT}\\int_{0}^{1}{\\frac{k_v}{\\overline{k}_v}\\delta\\left(Z-Z_b\\right)\\frac{d\\phi_j}{dZ}\\phi_i\\,dZ}
     
-    performing the dirac delta integrations:
+    Performing the dirac delta integrations:
         
     .. math:: \\mathbf{\\Psi}_{i,j,layer}=\\frac{dT_h}{dT}\\int_{Z_t}^{Z_b}{\\frac{k_h}{\\overline{k}_h}\\frac{\\eta}{\\overline{\\eta}}\\phi_j\\phi_i\\,dZ}-\\frac{dT_v}{dT}\\int_{Z_t}^{Z_b}{\\frac{k_v}{\\overline{k}_v}\\frac{d^2\\phi_j}{dZ^2}\\phi_i\\,dZ}-\\frac{dT_v}{dT}\\int_{Z_t}^{Z_b}{\\frac{d}{dZ}\\left(\\frac{k_v}{\\overline{k}_v}\\right)\\frac{d\\phi_j}{dZ}\\phi_i\\,dZ}-\\frac{dT_v}{dT}\\left.\\frac{k_v}{\\overline{k}_v}\\frac{d\\phi_j}{dZ}\\phi_i\\right|_{Z=Z_t}+\\frac{dT_v}{dT}\\left.\\frac{k_v}{\\overline{k}_v}\\frac{d\\phi_j}{dZ}\\phi_i\\right|_{Z=Z_b}
     
-    now to get it in the form of F(zb)-F(zt) we only take the zb part of the dirac integration:
+    Now, to get it in the form of F(zb)-F(zt) we only take the zb part of the dirac integration:
         
     .. math:: F\\left(z\\right)=\\frac{dT_h}{dT}\\int{\\frac{k_h}{\\overline{k}_h}\\frac{\\eta}{\\overline{\\eta}}\\phi_j\\phi_i\\,dZ}-\\frac{dT_v}{dT}\\int{\\frac{k_v}{\\overline{k}_v}\\frac{d^2\\phi_j}{dZ^2}\\phi_i\\,dZ}-\\frac{dT_v}{dT}\\int{\\frac{d}{dZ}\\left(\\frac{k_v}{\\overline{k}_v}\\right)\\frac{d\\phi_j}{dZ}\\phi_i\\,dZ}+\\frac{dT_v}{dT}\\left.\\frac{k_v}{\\overline{k}_v}\\frac{d\\phi_j}{dZ}\\phi_i\\right|_{Z=Z}
     
-    Now we get:
+    Finally we get:
         
     .. math:: \\mathbf{\\Psi}_{i,j,layer}=F\\left(Z_b\\right)-F\\left(Z_t\\right)
     
@@ -291,13 +295,51 @@ def generate_psi_code():
     return fn
 
 
-
+def generate_thesig_code():
+    """Perform integrations and output a function that will generate thesig (without docstring).
     
+    Paste the resulting code (at least the loops) into make_thesig.
+    
+    Notes
+    -----
+    The :math:`\\mathbf{\\theta}_\\sigma` matrix arises when integrating the 
+    depth dependant volume compressibility (:math:`m_v`) and surcharge 
+    :math:`\\sigma` against the spectral basisfunctions:
+    
+    .. math:: \\mathbf{\\theta}_{\\sigma,i}=\\int_{0}^1{\\frac{m_v}{\\overline{m}_v}\\sigma\\left(Z\\right)\\phi_i\\,dZ}
+    
+    """
+    mp, p = create_layer_sympy_var_and_maps(layer_prop=['z', 'mv', 'surz'])
+    
+    
+    
+    fcol = sympy.integrate(p['mv'] * p['surz'] * phi(mi, z), z)        
+    fcol = fcol.subs(z, mp['zbot']) - fcol.subs(z, mp['ztop'])
+    fcol = fcol.subs(mp)
+    
+    text = """def make_thesig(m, mvt, mvb, surzt, surzb, zt, zb):
+    import numpy
+    from math import sin, cos
+    
+    neig = len(m)
+    nlayers = len(zt)
+    
+    thesig = numpy.zeros(neig, float)        
+    for layer in range(nlayers):
+        for i in range(neig):
+            thesig[i] += %s
+    
+    return thesig"""
+    
+        
+    fn = text % fcol
+    return fn
     
 if __name__ == '__main__':
     #print(generate_gam_code())
     print '#'*65
-    print(generate_psi_code())
+    #print(generate_psi_code())
+    print(generate_thesig_code())
     pass
         
     

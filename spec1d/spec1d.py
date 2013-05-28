@@ -20,6 +20,7 @@
 """
 
 from __future__ import division
+import numpy 
 
 def m_func(i, boundary=0):
     """Sine series eigenvalue of boundary value problem on [0, 1]
@@ -89,7 +90,6 @@ def make_gam(m, mvt, mvb, zt, zb):
     
     """
     
-    import numpy
     from math import sin, cos
     
     neig = len(m)
@@ -165,7 +165,6 @@ def make_psi(m, kvt, kvb, kht, khb, ett, etb, zt, zb, dTv, dTh, dT = 1.0):
     
     """
     
-    import numpy
     from math import sin, cos
     
     neig = len(m)
@@ -184,4 +183,59 @@ def make_psi(m, kvt, kvb, kht, khb, ett, etb, zt, zb, dTv, dTh, dT = 1.0):
         for j in range(i + 1, neig):
             psi[j, i] = psi[i, j]                
     
-    return psi    
+    return psi
+    
+def make_thesig(m, mvt, mvb, surzt, surzb, zt, zb):
+    """Create and populate the thesig matrix for spec1d
+        
+    
+    The thesig matrix depends on depth dependance of volume compressibility (mv), 
+    and depth dependant componenet of surcharge (sur).
+        
+    Parameters
+    ----------
+    m : ``list`` of ``float``
+        eigenvlaues of BVP. generate with spec1d.m_func
+    mvt : ``list`` of ``float``
+        volume compressibility at top of each layer
+    mvb : ``list`` of ``float``
+        volume compressibility at bottom of each layer        
+    surzt : ``list`` of ``float``
+        depth dependant component of surcharge at top of each layer
+    surzb : ``list`` of ``float``
+        depth dependant component of surcharge at bottom of each layer        
+    zt : ``list`` of ``float``    
+        normalised depth or z-coordinate at top of each layer. `zt[0]` = 0
+    zb : ``list`` of ``float``
+        normalised depth or z-coordinate at bottom of each layer. `zt[-1]` = 1
+             
+    Returns
+    -------
+    thsig : numpy.ndarray
+        returns the column vector thesig, size determined by size of `m`
+        
+    See Also
+    --------
+    mfunc : used to generate 'm' input parameter
+    
+    Notes
+    -----
+    The :math:`\\mathbf{\\theta_\\sigma}` matrix arises when integrating the depth 
+    dependant volume compressibility (:math:`m_v`) and the depth dependant 
+    component of the surcharge (:math:`\\sigma\\left(Z\\right)`) against the 
+    spectral basis functions:
+    
+    .. math:: \\mathbf{\\theta}_{\\sigma,i}=\\int_{0}^1{\\frac{m_v}{\\overline{m}_v}\\sigma\\left(Z\\right)\\phi_i\\,dZ}
+    
+    """
+    from math import sin, cos
+    
+    neig = len(m)
+    nlayers = len(zt)
+    
+    thesig = numpy.zeros(neig, float)        
+    for layer in range(nlayers):
+        for i in range(neig):
+            thesig[i] += 2*surzb[layer]*mvb[layer]*(zb[layer]**2*m[i]**3 - 2*zt[layer]*zb[layer]*m[i]**3 + zt[layer]**2*m[i]**3)**(-1)*cos(m[i]*zb[layer]) - 2*surzb[layer]*mvb[layer]*(zb[layer]**2*m[i]**3 - 2*zt[layer]*zb[layer]*m[i]**3 + zt[layer]**2*m[i]**3)**(-1)*cos(m[i]*zt[layer]) + 2*surzb[layer]*mvb[layer]*m[i]*(zb[layer]**2*m[i]**3 - 2*zt[layer]*zb[layer]*m[i]**3 + zt[layer]**2*m[i]**3)**(-1)*zb[layer]*sin(m[i]*zb[layer]) - 2*surzb[layer]*mvb[layer]*m[i]*(zb[layer]**2*m[i]**3 - 2*zt[layer]*zb[layer]*m[i]**3 + zt[layer]**2*m[i]**3)**(-1)*zt[layer]*sin(m[i]*zt[layer]) - surzb[layer]*mvb[layer]*m[i]**2*(zb[layer]**2*m[i]**3 - 2*zt[layer]*zb[layer]*m[i]**3 + zt[layer]**2*m[i]**3)**(-1)*zb[layer]**2*cos(m[i]*zb[layer]) + surzb[layer]*mvb[layer]*m[i]**2*(zb[layer]**2*m[i]**3 - 2*zt[layer]*zb[layer]*m[i]**3 + zt[layer]**2*m[i]**3)**(-1)*zt[layer]**2*cos(m[i]*zt[layer]) - 2*surzb[layer]*mvt[layer]*(zb[layer]**2*m[i]**3 - 2*zt[layer]*zb[layer]*m[i]**3 + zt[layer]**2*m[i]**3)**(-1)*cos(m[i]*zb[layer]) + 2*surzb[layer]*mvt[layer]*(zb[layer]**2*m[i]**3 - 2*zt[layer]*zb[layer]*m[i]**3 + zt[layer]**2*m[i]**3)**(-1)*cos(m[i]*zt[layer]) - 2*surzb[layer]*mvt[layer]*m[i]*(zb[layer]**2*m[i]**3 - 2*zt[layer]*zb[layer]*m[i]**3 + zt[layer]**2*m[i]**3)**(-1)*zb[layer]*sin(m[i]*zb[layer]) + 2*surzb[layer]*mvt[layer]*m[i]*(zb[layer]**2*m[i]**3 - 2*zt[layer]*zb[layer]*m[i]**3 + zt[layer]**2*m[i]**3)**(-1)*zt[layer]*sin(m[i]*zt[layer]) + surzb[layer]*mvt[layer]*m[i]**2*(zb[layer]**2*m[i]**3 - 2*zt[layer]*zb[layer]*m[i]**3 + zt[layer]**2*m[i]**3)**(-1)*zb[layer]**2*cos(m[i]*zb[layer]) - surzb[layer]*mvt[layer]*m[i]**2*(zb[layer]**2*m[i]**3 - 2*zt[layer]*zb[layer]*m[i]**3 + zt[layer]**2*m[i]**3)**(-1)*zt[layer]**2*cos(m[i]*zt[layer]) - 2*surzt[layer]*mvb[layer]*(zb[layer]**2*m[i]**3 - 2*zt[layer]*zb[layer]*m[i]**3 + zt[layer]**2*m[i]**3)**(-1)*cos(m[i]*zb[layer]) + 2*surzt[layer]*mvb[layer]*(zb[layer]**2*m[i]**3 - 2*zt[layer]*zb[layer]*m[i]**3 + zt[layer]**2*m[i]**3)**(-1)*cos(m[i]*zt[layer]) - 2*surzt[layer]*mvb[layer]*m[i]*(zb[layer]**2*m[i]**3 - 2*zt[layer]*zb[layer]*m[i]**3 + zt[layer]**2*m[i]**3)**(-1)*zb[layer]*sin(m[i]*zb[layer]) + 2*surzt[layer]*mvb[layer]*m[i]*(zb[layer]**2*m[i]**3 - 2*zt[layer]*zb[layer]*m[i]**3 + zt[layer]**2*m[i]**3)**(-1)*zt[layer]*sin(m[i]*zt[layer]) + surzt[layer]*mvb[layer]*m[i]**2*(zb[layer]**2*m[i]**3 - 2*zt[layer]*zb[layer]*m[i]**3 + zt[layer]**2*m[i]**3)**(-1)*zb[layer]**2*cos(m[i]*zb[layer]) - surzt[layer]*mvb[layer]*m[i]**2*(zb[layer]**2*m[i]**3 - 2*zt[layer]*zb[layer]*m[i]**3 + zt[layer]**2*m[i]**3)**(-1)*zt[layer]**2*cos(m[i]*zt[layer]) + 2*surzt[layer]*mvt[layer]*(zb[layer]**2*m[i]**3 - 2*zt[layer]*zb[layer]*m[i]**3 + zt[layer]**2*m[i]**3)**(-1)*cos(m[i]*zb[layer]) - 2*surzt[layer]*mvt[layer]*(zb[layer]**2*m[i]**3 - 2*zt[layer]*zb[layer]*m[i]**3 + zt[layer]**2*m[i]**3)**(-1)*cos(m[i]*zt[layer]) + 2*surzt[layer]*mvt[layer]*m[i]*(zb[layer]**2*m[i]**3 - 2*zt[layer]*zb[layer]*m[i]**3 + zt[layer]**2*m[i]**3)**(-1)*zb[layer]*sin(m[i]*zb[layer]) - 2*surzt[layer]*mvt[layer]*m[i]*(zb[layer]**2*m[i]**3 - 2*zt[layer]*zb[layer]*m[i]**3 + zt[layer]**2*m[i]**3)**(-1)*zt[layer]*sin(m[i]*zt[layer]) - surzt[layer]*mvt[layer]*m[i]**2*(zb[layer]**2*m[i]**3 - 2*zt[layer]*zb[layer]*m[i]**3 + zt[layer]**2*m[i]**3)**(-1)*zb[layer]**2*cos(m[i]*zb[layer]) + surzt[layer]*mvt[layer]*m[i]**2*(zb[layer]**2*m[i]**3 - 2*zt[layer]*zb[layer]*m[i]**3 + zt[layer]**2*m[i]**3)**(-1)*zt[layer]**2*cos(m[i]*zt[layer]) + zb[layer]*surzb[layer]*mvt[layer]*m[i]*(zb[layer]**2*m[i]**3 - 2*zt[layer]*zb[layer]*m[i]**3 + zt[layer]**2*m[i]**3)**(-1)*sin(m[i]*zb[layer]) - zb[layer]*surzb[layer]*mvt[layer]*m[i]*(zb[layer]**2*m[i]**3 - 2*zt[layer]*zb[layer]*m[i]**3 + zt[layer]**2*m[i]**3)**(-1)*sin(m[i]*zt[layer]) - zb[layer]*surzb[layer]*mvt[layer]*m[i]**2*(zb[layer]**2*m[i]**3 - 2*zt[layer]*zb[layer]*m[i]**3 + zt[layer]**2*m[i]**3)**(-1)*zb[layer]*cos(m[i]*zb[layer]) + zb[layer]*surzb[layer]*mvt[layer]*m[i]**2*(zb[layer]**2*m[i]**3 - 2*zt[layer]*zb[layer]*m[i]**3 + zt[layer]**2*m[i]**3)**(-1)*zt[layer]*cos(m[i]*zt[layer]) + zb[layer]*surzt[layer]*mvb[layer]*m[i]*(zb[layer]**2*m[i]**3 - 2*zt[layer]*zb[layer]*m[i]**3 + zt[layer]**2*m[i]**3)**(-1)*sin(m[i]*zb[layer]) - zb[layer]*surzt[layer]*mvb[layer]*m[i]*(zb[layer]**2*m[i]**3 - 2*zt[layer]*zb[layer]*m[i]**3 + zt[layer]**2*m[i]**3)**(-1)*sin(m[i]*zt[layer]) - zb[layer]*surzt[layer]*mvb[layer]*m[i]**2*(zb[layer]**2*m[i]**3 - 2*zt[layer]*zb[layer]*m[i]**3 + zt[layer]**2*m[i]**3)**(-1)*zb[layer]*cos(m[i]*zb[layer]) + zb[layer]*surzt[layer]*mvb[layer]*m[i]**2*(zb[layer]**2*m[i]**3 - 2*zt[layer]*zb[layer]*m[i]**3 + zt[layer]**2*m[i]**3)**(-1)*zt[layer]*cos(m[i]*zt[layer]) - 2*zb[layer]*surzt[layer]*mvt[layer]*m[i]*(zb[layer]**2*m[i]**3 - 2*zt[layer]*zb[layer]*m[i]**3 + zt[layer]**2*m[i]**3)**(-1)*sin(m[i]*zb[layer]) + 2*zb[layer]*surzt[layer]*mvt[layer]*m[i]*(zb[layer]**2*m[i]**3 - 2*zt[layer]*zb[layer]*m[i]**3 + zt[layer]**2*m[i]**3)**(-1)*sin(m[i]*zt[layer]) + 2*zb[layer]*surzt[layer]*mvt[layer]*m[i]**2*(zb[layer]**2*m[i]**3 - 2*zt[layer]*zb[layer]*m[i]**3 + zt[layer]**2*m[i]**3)**(-1)*zb[layer]*cos(m[i]*zb[layer]) - 2*zb[layer]*surzt[layer]*mvt[layer]*m[i]**2*(zb[layer]**2*m[i]**3 - 2*zt[layer]*zb[layer]*m[i]**3 + zt[layer]**2*m[i]**3)**(-1)*zt[layer]*cos(m[i]*zt[layer]) - zb[layer]**2*surzt[layer]*mvt[layer]*m[i]**2*(zb[layer]**2*m[i]**3 - 2*zt[layer]*zb[layer]*m[i]**3 + zt[layer]**2*m[i]**3)**(-1)*cos(m[i]*zb[layer]) + zb[layer]**2*surzt[layer]*mvt[layer]*m[i]**2*(zb[layer]**2*m[i]**3 - 2*zt[layer]*zb[layer]*m[i]**3 + zt[layer]**2*m[i]**3)**(-1)*cos(m[i]*zt[layer]) - 2*zt[layer]*surzb[layer]*mvb[layer]*m[i]*(zb[layer]**2*m[i]**3 - 2*zt[layer]*zb[layer]*m[i]**3 + zt[layer]**2*m[i]**3)**(-1)*sin(m[i]*zb[layer]) + 2*zt[layer]*surzb[layer]*mvb[layer]*m[i]*(zb[layer]**2*m[i]**3 - 2*zt[layer]*zb[layer]*m[i]**3 + zt[layer]**2*m[i]**3)**(-1)*sin(m[i]*zt[layer]) + 2*zt[layer]*surzb[layer]*mvb[layer]*m[i]**2*(zb[layer]**2*m[i]**3 - 2*zt[layer]*zb[layer]*m[i]**3 + zt[layer]**2*m[i]**3)**(-1)*zb[layer]*cos(m[i]*zb[layer]) - 2*zt[layer]*surzb[layer]*mvb[layer]*m[i]**2*(zb[layer]**2*m[i]**3 - 2*zt[layer]*zb[layer]*m[i]**3 + zt[layer]**2*m[i]**3)**(-1)*zt[layer]*cos(m[i]*zt[layer]) + zt[layer]*surzb[layer]*mvt[layer]*m[i]*(zb[layer]**2*m[i]**3 - 2*zt[layer]*zb[layer]*m[i]**3 + zt[layer]**2*m[i]**3)**(-1)*sin(m[i]*zb[layer]) - zt[layer]*surzb[layer]*mvt[layer]*m[i]*(zb[layer]**2*m[i]**3 - 2*zt[layer]*zb[layer]*m[i]**3 + zt[layer]**2*m[i]**3)**(-1)*sin(m[i]*zt[layer]) - zt[layer]*surzb[layer]*mvt[layer]*m[i]**2*(zb[layer]**2*m[i]**3 - 2*zt[layer]*zb[layer]*m[i]**3 + zt[layer]**2*m[i]**3)**(-1)*zb[layer]*cos(m[i]*zb[layer]) + zt[layer]*surzb[layer]*mvt[layer]*m[i]**2*(zb[layer]**2*m[i]**3 - 2*zt[layer]*zb[layer]*m[i]**3 + zt[layer]**2*m[i]**3)**(-1)*zt[layer]*cos(m[i]*zt[layer]) + zt[layer]*surzt[layer]*mvb[layer]*m[i]*(zb[layer]**2*m[i]**3 - 2*zt[layer]*zb[layer]*m[i]**3 + zt[layer]**2*m[i]**3)**(-1)*sin(m[i]*zb[layer]) - zt[layer]*surzt[layer]*mvb[layer]*m[i]*(zb[layer]**2*m[i]**3 - 2*zt[layer]*zb[layer]*m[i]**3 + zt[layer]**2*m[i]**3)**(-1)*sin(m[i]*zt[layer]) - zt[layer]*surzt[layer]*mvb[layer]*m[i]**2*(zb[layer]**2*m[i]**3 - 2*zt[layer]*zb[layer]*m[i]**3 + zt[layer]**2*m[i]**3)**(-1)*zb[layer]*cos(m[i]*zb[layer]) + zt[layer]*surzt[layer]*mvb[layer]*m[i]**2*(zb[layer]**2*m[i]**3 - 2*zt[layer]*zb[layer]*m[i]**3 + zt[layer]**2*m[i]**3)**(-1)*zt[layer]*cos(m[i]*zt[layer]) + zt[layer]*zb[layer]*surzb[layer]*mvt[layer]*m[i]**2*(zb[layer]**2*m[i]**3 - 2*zt[layer]*zb[layer]*m[i]**3 + zt[layer]**2*m[i]**3)**(-1)*cos(m[i]*zb[layer]) - zt[layer]*zb[layer]*surzb[layer]*mvt[layer]*m[i]**2*(zb[layer]**2*m[i]**3 - 2*zt[layer]*zb[layer]*m[i]**3 + zt[layer]**2*m[i]**3)**(-1)*cos(m[i]*zt[layer]) + zt[layer]*zb[layer]*surzt[layer]*mvb[layer]*m[i]**2*(zb[layer]**2*m[i]**3 - 2*zt[layer]*zb[layer]*m[i]**3 + zt[layer]**2*m[i]**3)**(-1)*cos(m[i]*zb[layer]) - zt[layer]*zb[layer]*surzt[layer]*mvb[layer]*m[i]**2*(zb[layer]**2*m[i]**3 - 2*zt[layer]*zb[layer]*m[i]**3 + zt[layer]**2*m[i]**3)**(-1)*cos(m[i]*zt[layer]) - zt[layer]**2*surzb[layer]*mvb[layer]*m[i]**2*(zb[layer]**2*m[i]**3 - 2*zt[layer]*zb[layer]*m[i]**3 + zt[layer]**2*m[i]**3)**(-1)*cos(m[i]*zb[layer]) + zt[layer]**2*surzb[layer]*mvb[layer]*m[i]**2*(zb[layer]**2*m[i]**3 - 2*zt[layer]*zb[layer]*m[i]**3 + zt[layer]**2*m[i]**3)**(-1)*cos(m[i]*zt[layer])
+    
+    return thesig
